@@ -5,8 +5,11 @@
   import moonO from "svelte-awesome/icons/moonO";
   import sunO from "svelte-awesome/icons/sunO";
   import refresh from "svelte-awesome/icons/refresh";
+  import bars from "svelte-awesome/icons/bars";
+  import search from "svelte-awesome/icons/search";
   import { currencyStore, updateRate } from "./store";
   import { writable } from "svelte/store";
+  import { handleClickOutside, toggleMenu } from "../util/utils";
 
   $: currentCurrency = $currencyStore;
   $: currentRate = $updateRate;
@@ -45,31 +48,6 @@
     store.set(newData);
   }
 
-  function toggleMenu(menu: HTMLElement | null, button: HTMLElement | null, otherMenu: HTMLElement | null) {
-    if (menu && button) {
-      const isMenuHidden = menu.classList.contains("hidden");
-      const isOtherMenuHidden = otherMenu ? otherMenu.classList.contains("hidden") : true;
-
-      if (isMenuHidden && !isOtherMenuHidden) {
-        otherMenu?.setAttribute("aria-hidden", "true");
-        otherMenu?.classList.add("hidden");
-      }
-
-      menu.setAttribute("aria-hidden", isMenuHidden ? "false" : "true");
-      button.setAttribute("aria-expanded", isMenuHidden ? "true" : "false");
-      menu.classList.toggle("hidden");
-    }
-  }
-
-  function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, button: HTMLElement | null) {
-    const target = event.target as HTMLElement;
-    if (menu && button && !menu.contains(target) && target !== button && !target.classList.contains("Icon")) {
-      menu.setAttribute("aria-hidden", "true");
-      button.setAttribute("aria-expanded", "false");
-      menu.classList.add("hidden");
-    }
-  }
-
   onMount(() => {
     const storedMode = localStorage.getItem("color-theme");
     if (storedMode === "dark" || (!storedMode && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -98,76 +76,107 @@
 
 <header>
   <nav
-    class="flex items-center justify-between w-full py-3 my-auto border-b lg:px-64 md:px-32 sm:pl-4 border-b-secondary dark:border-b-dark-secondary"
+    class="flex items-center justify-center w-full gap-20 px-4 py-3 my-auto transition-all border-b 2xl:px-96 xl:px-32 lg:px-24 md:px-16 border-b-secondary dark:border-b-dark-secondary"
   >
     <a href="cryptotracklive.com" class="relative flex items-center w-40">
-      <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">CryptoTrack</span>
+      <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
+      <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
       <span
         class="absolute top-0 right-0 px-1 text-xs rounded-md text-text bg-primary dark:text-dark-text dark:bg-dark-primary"
         >LIVE</span
       >
     </a>
+
+    <!-- Search Bar PC -->
+    <div
+      class="relative hidden py-5 transition-all rounded-lg 2xl:px-64 xl:px-48 lg:px-32 md:px-24 md:block 2xl:block bg-secondary dark:bg-dark-secondary text-text dark:text-dark-text"
+    >
+      <input
+        type="text"
+        placeholder="Search coins"
+        class="w-full h-full pl-4 pr-2 text-left border-none rounded-lg outline-none bg-secondary dark:bg-dark-secondary focus:outline-none"
+        style="position: absolute; inset: 0;"
+      />
+    </div>
+
     <div class="flex gap-2">
+      <!-- Search Bar Phone -->
       <button
-        id="currency-button"
-        aria-expanded="false"
-        class="items-center px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
+        class="relative flex items-center justify-center w-10 h-10 overflow-hidden transition rounded-lg 2xl:hidden lg:hidden md:hidden xl:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:block sm:block"
       >
-        {currentCurrency}
-        <Icon data={ChevronDown} class="scale-75 opacity-50" />
+        <span class="flex items-center justify-center transition-all">
+          <Icon data={search} class="fill-secondary dark:fill-dark-secondary"></Icon>
+        </span>
       </button>
-      <div
-        id="currency-menu"
-        tabindex="-1"
-        aria-hidden="true"
-        class="absolute z-50 w-32 py-1 transform translate-x-10 rounded-md top-16 right-[395px] h-fit bg-secondary dark:bg-dark-secondary hidden"
-      >
-        {#each currencies as currencyItem}
-          <button
-            on:click={() => updateData(currencyItem, currencyMenu, currencyButton, currencyStore)}
-            class="
-          flex items-center w-full h-8 px-2 text-text dark:text-dark-text
-          bg-secondary dark:bg-dark-secondary
-          hover:bg-accent/50 dark:hover:bg-dark-accent/50
-          {currencyItem == currentCurrency ? '!bg-accent !dark:bg-dark-accent' : ''}
-        "
-          >
-            {currencyItem}
-          </button>
-        {/each}
+      <div class="relative">
+        <!-- Currency Selector -->
+        <button
+          id="currency-button"
+          aria-expanded="false"
+          class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 lg:block 2xl:block"
+        >
+          {currentCurrency}
+          <Icon data={ChevronDown} class="scale-75 opacity-50" />
+        </button>
+        <div
+          id="currency-menu"
+          tabindex="-1"
+          aria-hidden="true"
+          class="absolute z-50 w-32 py-1 transform translate-x-10 rounded-md top-12 right-[5px] h-fit bg-secondary dark:bg-dark-secondary hidden"
+        >
+          <!-- Currency Buttons -->
+          {#each currencies as currencyItem}
+            <button
+              on:click={() => updateData(currencyItem, currencyMenu, currencyButton, currencyStore)}
+              class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {currencyItem ==
+              currentCurrency
+                ? '!bg-accent !dark:bg-dark-accent'
+                : ''}"
+            >
+              {currencyItem}
+            </button>
+          {/each}
+        </div>
       </div>
-      <button
-        id="update-button"
-        class="items-center px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
-      >
-        <Icon data={refresh} class="scale-100 opacity-50" />
-        {currentRate / 1000}s
-        <Icon data={ChevronDown} class="scale-75 opacity-50" />
-      </button>
-      <div
-        id="update-menu"
-        tabindex="-1"
-        aria-hidden="true"
-        class="absolute z-50 w-24 py-1 transform translate-x-10 rounded-md top-16 right-[325px] h-fit bg-secondary dark:bg-dark-secondary hidden"
-      >
-        {#each updateRates as rate}
-          <button
-            on:click={() => updateData(rate, updateRateMenu, updateRateButton, updateRate)}
-            class="
-        flex items-center w-full h-8 px-2 text-text dark:text-dark-text
-        bg-secondary dark:bg-dark-secondary
-        hover:bg-accent/50 dark:hover:bg-dark-accent/50
-        {rate === currentRate ? '!bg-accent !dark:bg-dark-accent' : ''}
-      "
-          >
-            {rate / 1000}s
-          </button>
-        {/each}
+
+      <div class="relative">
+        <!-- Update Button -->
+        <button
+          id="update-button"
+          class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 lg:block 2xl:block"
+        >
+          <Icon data={refresh} class="scale-100 opacity-50" />
+          {currentRate / 1000}s
+          <Icon data={ChevronDown} class="scale-75 opacity-50" />
+        </button>
+
+        <!-- Update Menu -->
+        <div
+          id="update-menu"
+          tabindex="-1"
+          aria-hidden="true"
+          class="absolute z-50 w-24 py-1 transform translate-x-10 rounded-md top-12 right-[20px] h-fit bg-secondary dark:bg-dark-secondary hidden"
+        >
+          <!-- Update Rate Buttons -->
+          {#each updateRates as rate}
+            <button
+              on:click={() => updateData(rate, updateRateMenu, updateRateButton, updateRate)}
+              class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {rate ===
+              currentRate
+                ? '!bg-accent !dark:bg-dark-accent'
+                : ''}"
+            >
+              {rate / 1000}s
+            </button>
+          {/each}
+        </div>
       </div>
+
+      <!-- Dark Mode Toggle -->
       <button
         id="mode-icon"
         on:click={toggleDarkMode}
-        class="relative items-center w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
+        class="relative items-center hidden w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 lg:block 2xl:block"
       >
         <span class="absolute inset-0 flex items-center justify-center transition-all duration-400">
           {#if $darkMode}
@@ -177,6 +186,17 @@
           {/if}
         </span>
       </button>
+
+      <!-- Burger Menu (Mobile) -->
+      <button
+        id="burger-menu"
+        on:click={toggleDarkMode}
+        class="relative items-center w-10 h-10 overflow-hidden transition rounded-lg 2xl:hidden lg:hidden md:hidden xl:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:block sm:block"
+      >
+        <span class="inset-0 flex items-center justify-center transition-all">
+          <Icon data={bars} class="fill-secondary dark:fill-dark-secondary"></Icon>
+        </span></button
+      >
     </div>
   </nav>
 </header>

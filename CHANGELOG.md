@@ -1,5 +1,18 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.12 Beta
+
+### New Features
+
+- Added a way to scroll up from bottom of the table
+- Added option to change how much coins will be visible on one page
+- Added searchbar (doesn't work yet)
+- Added more responsive design
+
+### Changes
+
+- Cleaned code
+
 ## Version 0.11 Beta
 
 ### Changes

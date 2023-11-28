@@ -7,11 +7,13 @@
   import minus from "svelte-awesome/icons/minus";
   import type { CryptoData } from "./Data";
   import { formatNumberToHTML } from "../util/utils";
-  import { currencyStore, updateRate } from "./store";
+  import { currencyStore, updateRate, entryStore } from "./store";
 
   let shortenedCurrency: string;
+  let entryCount: number;
   $: {
     shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
+    entryCount = $entryStore;
     updateData();
   }
 
@@ -28,7 +30,7 @@
           sort: "rank",
           order: "ascending",
           offset: 0,
-          limit: 10,
+          limit: entryCount,
           meta: true,
         }),
       });

@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .scale-80 {
+    transform: scale(0.8);
+  }
+}
+body {
+  @apply font-poppins;
+}

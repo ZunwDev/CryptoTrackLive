@@ -4,6 +4,7 @@
   import ChevronDown from "svelte-awesome/icons/chevronDown";
   import moonO from "svelte-awesome/icons/moonO";
   import sunO from "svelte-awesome/icons/sunO";
+  import refresh from "svelte-awesome/icons/refresh";
   import { currencyStore, updateRate } from "./store";
   import { writable } from "svelte/store";
 
@@ -14,16 +15,12 @@
   function toggleDarkMode() {
     darkMode.update((mode) => {
       const newMode = !mode;
-      const rootElement = document.documentElement;
-      const isDark = rootElement.classList.toggle("dark", newMode);
+      const isDark = document.documentElement.classList.toggle("dark", newMode);
 
       localStorage.setItem("color-theme", isDark ? "dark" : "");
       const iconElement = document.getElementById("mode-icon");
-
       const iconToChange = iconElement?.firstChild as HTMLElement | null;
-      if (iconToChange) {
-        iconToChange.classList.toggle("rotate-45", !isDark);
-      }
+      iconToChange?.classList.toggle("rotate-45", !isDark);
 
       return newMode;
     });
@@ -64,17 +61,9 @@
     }
   }
 
-  function handleClickOutsideCurrency(event: MouseEvent) {
-    handleMenuClickOutside(event, currencyMenu, currencyButton);
-  }
-
-  function handleClickOutsideUpdateRate(event: MouseEvent) {
-    handleMenuClickOutside(event, updateRateMenu, updateRateButton);
-  }
-
-  function handleMenuClickOutside(event: MouseEvent, menu: HTMLElement | null, button: HTMLElement | null) {
-    const target = event.target as Node;
-    if (menu && button && !menu.contains(target) && target !== button) {
+  function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, button: HTMLElement | null) {
+    const target = event.target as HTMLElement;
+    if (menu && button && !menu.contains(target) && target !== button && !target.classList.contains("Icon")) {
       menu.setAttribute("aria-hidden", "true");
       button.setAttribute("aria-expanded", "false");
       menu.classList.add("hidden");
@@ -93,15 +82,15 @@
 
     window.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
-      if (target === updateRateButton) {
+      if (target === updateRateButton || (updateRateButton && updateRateButton.contains(target))) {
         event.stopPropagation();
         toggleMenu(updateRateMenu, updateRateButton, currencyMenu);
-      } else if (target === currencyButton) {
+      } else if (target === currencyButton || (currencyButton && currencyButton.contains(target))) {
         event.stopPropagation();
         toggleMenu(currencyMenu, currencyButton, updateRateMenu);
       } else {
-        handleClickOutsideCurrency(event);
-        handleClickOutsideUpdateRate(event);
+        handleClickOutside(event, currencyMenu, currencyButton);
+        handleClickOutside(event, updateRateMenu, updateRateButton);
       }
     });
   });
@@ -131,7 +120,7 @@
         id="currency-menu"
         tabindex="-1"
         aria-hidden="true"
-        class="absolute z-50 w-32 py-1 transform translate-x-10 rounded-md top-16 right-[375px] h-fit bg-secondary dark:bg-dark-secondary hidden"
+        class="absolute z-50 w-32 py-1 transform translate-x-10 rounded-md top-16 right-[395px] h-fit bg-secondary dark:bg-dark-secondary hidden"
       >
         {#each currencies as currencyItem}
           <button
@@ -151,6 +140,7 @@
         id="update-button"
         class="items-center px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
       >
+        <Icon data={refresh} class="scale-100 opacity-50" />
         {currentRate / 1000}s
         <Icon data={ChevronDown} class="scale-75 opacity-50" />
       </button>
@@ -158,7 +148,7 @@
         id="update-menu"
         tabindex="-1"
         aria-hidden="true"
-        class="absolute z-50 w-24 py-1 transform translate-x-10 rounded-md top-16 right-[300px] h-fit bg-secondary dark:bg-dark-secondary hidden"
+        class="absolute z-50 w-24 py-1 transform translate-x-10 rounded-md top-16 right-[325px] h-fit bg-secondary dark:bg-dark-secondary hidden"
       >
         {#each updateRates as rate}
           <button

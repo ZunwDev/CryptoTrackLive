@@ -1,5 +1,17 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.11 Beta
+
+### Changes
+
+- Moved the public API into .env file
+- Preparation for coin view
+- File organization
+
+### Fixes
+
+- Fixed opening currency converter and update rate changer
+
 ## Version 0.1
 
 ### New Features

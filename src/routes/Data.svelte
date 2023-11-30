@@ -5,15 +5,20 @@
   import caretUp from "svelte-awesome/icons/caretUp";
   import caretDown from "svelte-awesome/icons/caretDown";
   import minus from "svelte-awesome/icons/minus";
-  import type { CryptoData } from "./Data";
-  import { formatNumberToHTML } from "../util/utils";
-  import { currencyStore, updateRate, entryStore } from "./store";
+  import type { CryptoData, HistoricalCryptoData } from "./Data";
+  import { formatNumberToHTML, getCurrentUnixTimeAt8AM, getUnixTimeFor7DaysAgoAt8AM } from "../util/utils";
+  import Chart from "chart.js/auto";
+  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore } from "./store";
 
   let shortenedCurrency: string;
+  let sortDirection: string;
   let entryCount: number;
+  let sortBy: string;
   $: {
     shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
     entryCount = $entryStore;
+    sortDirection = $sortDirStore;
+    sortBy = $sortByStore;
     updateData();
   }
 
@@ -27,8 +32,8 @@
         },
         body: JSON.stringify({
           currency: shortenedCurrency,
-          sort: "rank",
-          order: "ascending",
+          sort: sortBy,
+          order: sortDirection,
           offset: 0,
           limit: entryCount,
           meta: true,
@@ -47,8 +52,46 @@
     }
   }
 
+  async function getHistoricalData(code: string, startTS: number, endTS: number) {
+    try {
+      const response = await fetch("https://api.livecoinwatch.com/coins/single/history", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_API_KEY,
+        },
+        body: JSON.stringify({
+          currency: shortenedCurrency,
+          code: code,
+          meta: true,
+          start: startTS,
+          end: endTS,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      return null;
+    }
+  }
+
   async function fetchData() {
     const data = await getData();
+    if (data) {
+      //console.log("Fetched data:", data);
+      return data;
+    }
+    return [];
+  }
+
+  async function fetchHistoricalData(code: string, startTS: number, endTS: number) {
+    const data = await getHistoricalData(code, startTS, endTS);
     if (data) {
       //console.log("Fetched data:", data);
       return data;
@@ -78,7 +121,25 @@
     return [];
   }
 
+  async function loadHistoricalTableData(
+    code: string,
+    startTS: number,
+    endTS: number
+  ): Promise<HistoricalCryptoData[]> {
+    const response = await fetchHistoricalData(code, startTS, endTS);
+
+    if (response && Array.isArray(response.history)) {
+      return response.history.map((item: any) => ({
+        code: response.code || "-",
+        history: item.rate || null,
+      }));
+    }
+
+    return [];
+  }
+
   let tableData: CryptoData[] = [];
+  let historicalTableData: HistoricalCryptoData[] = [];
   let previousChanges: Record<string, number> = {};
 
   if (browser) {
@@ -137,6 +198,15 @@
     }
   }
 
+  async function updateHistoricalData(code: string, startTS: number, endTS: number, canvas: HTMLCanvasElement | null) {
+    const newData = await loadHistoricalTableData(code, startTS, endTS);
+    if (newData.length > 0) {
+      historicalTableData = newData;
+      const prices = historicalTableData.map((item) => item.history);
+      createLineChart(canvas, prices);
+    }
+  }
+
   let updateInterval: number | undefined;
 
   function stopUpdates() {
@@ -162,6 +232,54 @@
     window.location.href = `view/${rank}/${name}`;
   }
 
+  function createLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
+    console.log(prices);
+    const ctx = canvas?.getContext("2d");
+    if (ctx) {
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
+          datasets: [
+            {
+              label: "",
+              fill: true,
+              data: prices,
+              borderColor: "magenta",
+              backgroundColor: "rgba(143, 77, 151, 0.7)",
+              borderWidth: 1,
+              pointRadius: 0, // Hide points
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+          scales: {
+            x: {
+              display: false,
+              title: {
+                display: false,
+                text: "Days",
+              },
+            },
+            y: {
+              display: false,
+              title: {
+                display: false,
+                text: "Price",
+              },
+            },
+          },
+        },
+      });
+    }
+  }
+
   async function init() {
     await updateData();
     trackCryptoChanges();
@@ -170,22 +288,38 @@
   }
 
   onMount(() => {
+    setTimeout(() => {
+      tableData.forEach(async (item, index) => {
+        const coinCode = item.code;
+        const startTime = getUnixTimeFor7DaysAgoAt8AM();
+        const endTime = getCurrentUnixTimeAt8AM();
+
+        const canvasId = `canvas-${index}`;
+        const canvasElement = document.getElementById(canvasId) as HTMLCanvasElement;
+
+        if (canvasElement) {
+          await updateHistoricalData(coinCode, startTime, endTime, canvasElement);
+        }
+      });
+    }, 5000);
     init();
   });
 </script>
 
-{#each tableData as crypto}
+{#each tableData as crypto, index}
   <tr
     on:click={() => handleRowClick(crypto.rank, crypto.name)}
     role="button"
     class="even:bg-bg odd:bg-secondary dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
   >
     <td class="px-4 py-2 text-text/30 dark:text-dark-text/30">{crypto.rank}</td>
-    <td class="px-4 py-2"><img src={crypto.png64} alt={crypto.code} class="w-8 h-8" /></td>
+    <td class="px-4 py-2"><img src={crypto.png64} alt={crypto.code} loading="lazy" class="w-8 h-8" /></td>
     <td class="px-4 py-2">
       {@html displayCurrencyName(crypto).outerHTML}
     </td>
-    <td class="px-4 py-2 text-text dark:text-dark-text">-</td>
+    <td class="px-4 py-2 text-text dark:text-dark-text">
+      <canvas id={`canvas-${index}`} width="100" height="0" class="py-2"></canvas>
+    </td>
     <td class="px-4 py-2">
       <span class="text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
       {@html formatNumberToHTML(crypto.rate).outerHTML}

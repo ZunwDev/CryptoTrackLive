@@ -14,3 +14,9 @@ export interface CryptoData {
   change24h: number;
   changeStatus: string;
 }
+
+export interface HistoricalCryptoData {
+  code: string;
+  history: any;
+  rate: number;
+}

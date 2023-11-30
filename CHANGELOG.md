@@ -1,5 +1,20 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13 Beta
+
+### New features
+
+- Added weekly charts of prices (later will be possible to change timing)
+- Added sorting for rank, coin (name), price, and volume / descending and ascending
+- Search bar can be now focused by "/"
+
+### Changes
+
+- Changed how search bar looks
+- Added icon to coin entry amount
+- Optimized some parts of code
+- Cleaned some parts of code
+
 ## Version 0.12 Beta
 
 ### New Features

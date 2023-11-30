@@ -1,5 +1,5 @@
 export function formatNumberToHTML(number: number) {
-  const suffixes = ["", "K", "M", "B", "T"];
+  const suffixes = ["", "K", "M", "B", "T", "QD", "QN", "SX"];
   const numAbs = Math.abs(number);
   const suffixNum = Math.min(Math.floor(Math.log10(numAbs) / 3), suffixes.length - 1);
   const shortValue = (numAbs / Math.pow(1000, suffixNum)).toFixed(2);
@@ -65,4 +65,17 @@ export function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, 
     button.setAttribute("aria-expanded", "false");
     menu.classList.add("hidden");
   }
+}
+
+export function getUnixTimeFor7DaysAgoAt8AM() {
+  const today = new Date();
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  sevenDaysAgo.setUTCHours(8, 0, 0, 0);
+  return sevenDaysAgo.getTime();
+}
+
+export function getCurrentUnixTimeAt8AM() {
+  const currentDate = new Date();
+  currentDate.setUTCHours(8, 0, 0, 0);
+  return currentDate.getTime();
 }

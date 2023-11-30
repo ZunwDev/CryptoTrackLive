@@ -3,3 +3,5 @@ import { writable } from "svelte/store";
 export const currencyStore = writable("USD ($)");
 export const updateRate = writable(15000);
 export const entryStore = writable(10);
+export const sortDirStore = writable("ascending");
+export const sortByStore = writable("rank");

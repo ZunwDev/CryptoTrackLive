@@ -33,7 +33,9 @@
   let currencyButton: HTMLElement | null;
   let updateRateMenu: HTMLElement | null;
   let updateRateButton: HTMLElement | null;
+  let searchBarPCInput: HTMLElement | null;
   let searchBarPC: HTMLElement | null;
+  let searchMenu: HTMLElement | null;
   let currencies: any[] = ["USD ($)", "EUR (€)", "GBP (£)", "AUD ($)", "CAD ($)", "BTC (₿)", "ETH (Ξ)"];
   let updateRates: any[] = [5000, 10000, 15000, 20000, 25000, 30000];
 
@@ -63,20 +65,30 @@
       } else if (target === currencyButton || (currencyButton && currencyButton.contains(target))) {
         event.stopPropagation();
         toggleMenu(currencyMenu, currencyButton, updateRateMenu);
+      } else if (target === searchBarPC || (searchBarPC && searchBarPC.contains(target))) {
+        event.stopPropagation();
       } else {
         handleClickOutside(event, currencyMenu, currencyButton);
         handleClickOutside(event, updateRateMenu, updateRateButton);
+        handleClickOutside(event, searchMenu, searchBarPC);
       }
     });
 
     window.addEventListener("keyup", (event) => {
       if (event.key === "/") {
         setTimeout(() => {
-          searchBarPC?.focus();
+          searchBarPCInput?.focus();
+          searchMenu?.classList.toggle("hidden");
         }, 0);
       }
     });
   });
+
+  const iterations = 20;
+  const templateData = Array.from({ length: iterations }, (_, index) => ({
+    id: index + 1,
+    label: `Button ${index + 1}`,
+  }));
 </script>
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
@@ -93,11 +105,14 @@
     <div class="flex gap-0.5 md:gap-2 2xl:gap-2 ml-auto md:ml-0 2xl:ml-0">
       <!-- Search Bar PC -->
       <div
+        bind:this={searchBarPC}
+        aria-expanded="false"
         class="relative hidden px-32 py-2 mx-auto transition-all rounded-lg md:block 2xl:block bg-secondary dark:bg-dark-secondary text-text dark:text-dark-text"
       >
         <Icon data={search} class="absolute inset-0 z-30 scale-125 opacity-50 left-2 top-3"></Icon>
         <input
-          bind:this={searchBarPC}
+          on:click={() => searchMenu?.classList.toggle("hidden")}
+          bind:this={searchBarPCInput}
           type="text"
           placeholder="Search coins..."
           class="absolute inset-0 w-full h-full pl-8 pr-6 text-left border-none rounded-lg outline-none bg-secondary focus:bg-bg/50 dark:focus:bg-dark-bg/50 dark:bg-dark-secondary focus:outline-none"
@@ -106,6 +121,20 @@
           class="absolute z-30 py-0.5 px-1.5 right-1.5 bottom-1.5 bg-secondary dark:bg-dark-secondary brightness-200 rounded-lg opacity-50 text-text dark:text-dark-text"
           >/</span
         >
+        <div
+          bind:this={searchMenu}
+          tabindex="-1"
+          aria-hidden="true"
+          class="absolute right-0 z-50 hidden w-64 py-1 overflow-y-auto rounded-md h-72 top-12 bg-secondary dark:bg-dark-secondary"
+        >
+          {#each templateData as item (item.id)}
+            <button
+              class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30"
+            >
+              {item.label}
+            </button>
+          {/each}
+        </div>
       </div>
       <!-- Search Bar Phone -->
       <button
@@ -130,7 +159,7 @@
           bind:this={currencyMenu}
           tabindex="-1"
           aria-hidden="true"
-          class="absolute z-50 w-32 py-1 transform translate-x-10 rounded-md top-12 right-[5px] h-fit bg-secondary dark:bg-dark-secondary hidden"
+          class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-12 h-fit bg-secondary dark:bg-dark-secondary"
         >
           <!-- Currency Buttons -->
           {#each currencies as currencyItem}
@@ -166,7 +195,7 @@
           bind:this={updateRateMenu}
           tabindex="-1"
           aria-hidden="true"
-          class="absolute z-50 w-24 py-1 transform translate-x-10 rounded-md top-12 right-[20px] h-fit bg-secondary dark:bg-dark-secondary hidden"
+          class="absolute right-0 z-50 hidden w-24 py-1 rounded-md top-12 h-fit bg-secondary dark:bg-dark-secondary"
         >
           <!-- Update Rate Buttons -->
           {#each updateRates as rate}

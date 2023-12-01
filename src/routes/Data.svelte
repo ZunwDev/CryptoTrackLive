@@ -10,16 +10,46 @@
   import Chart from "chart.js/auto";
   import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore } from "./store";
 
-  let shortenedCurrency: string;
-  let sortDirection: string;
-  let entryCount: number;
-  let sortBy: string;
+  // Declare reactive variables
+  let shortenedCurrency = "";
+  let sortDirection = "";
+  let entryCount = 0;
+  let sortBy = "";
+  let updateCharts = async () => {};
+
+  onMount(async () => {
+    updateCharts = async () => {
+      tableData.forEach(async (item, index) => {
+        const coinCode = item.code;
+        const startTime = getUnixTimeFor7DaysAgoAt8AM();
+        const endTime = getCurrentUnixTimeAt8AM();
+
+        await updateHistoricalData(coinCode, startTime, endTime);
+        const canvasId = `canvas-${index}`;
+        const canvasElement = document && (document.getElementById(canvasId) as HTMLCanvasElement);
+
+        if (canvasElement) {
+          destroyChart(canvasElement);
+          const prices = historicalTableData.map((item) => item.history);
+          createLineChart(canvasElement, prices);
+        }
+      });
+    };
+
+    await updateCharts();
+  });
+  // Function to update all data (async)
+  async function updateAllData() {
+    await updateData();
+    await updateCharts();
+  }
+
   $: {
     shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
     entryCount = $entryStore;
     sortDirection = $sortDirStore;
     sortBy = $sortByStore;
-    updateData();
+    updateAllData();
   }
 
   async function getData() {
@@ -198,12 +228,10 @@
     }
   }
 
-  async function updateHistoricalData(code: string, startTS: number, endTS: number, canvas: HTMLCanvasElement | null) {
+  async function updateHistoricalData(code: string, startTS: number, endTS: number) {
     const newData = await loadHistoricalTableData(code, startTS, endTS);
     if (newData.length > 0) {
       historicalTableData = newData;
-      const prices = historicalTableData.map((item) => item.history);
-      createLineChart(canvas, prices);
     }
   }
 
@@ -232,8 +260,19 @@
     window.location.href = `view/${rank}/${name}`;
   }
 
+  function destroyChart(canvas: HTMLCanvasElement | null) {
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        const chartInstance = Chart.getChart(ctx);
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+      }
+    }
+  }
+
   function createLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
-    console.log(prices);
     const ctx = canvas?.getContext("2d");
     if (ctx) {
       new Chart(ctx, {
@@ -257,6 +296,9 @@
           plugins: {
             legend: {
               display: false,
+            },
+            tooltip: {
+              enabled: false,
             },
           },
           scales: {
@@ -288,20 +330,6 @@
   }
 
   onMount(() => {
-    setTimeout(() => {
-      tableData.forEach(async (item, index) => {
-        const coinCode = item.code;
-        const startTime = getUnixTimeFor7DaysAgoAt8AM();
-        const endTime = getCurrentUnixTimeAt8AM();
-
-        const canvasId = `canvas-${index}`;
-        const canvasElement = document.getElementById(canvasId) as HTMLCanvasElement;
-
-        if (canvasElement) {
-          await updateHistoricalData(coinCode, startTime, endTime, canvasElement);
-        }
-      });
-    }, 5000);
     init();
   });
 </script>

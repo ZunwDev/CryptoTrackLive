@@ -1,5 +1,18 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.1 Beta
+
+### New features
+
+- Added template data for search, since API doesn't return data by regex - this means search will not work (yet)
+- Added chart updating and faster loading, when any setting changes (ex. sorting, changing currency etc.)
+
+### Changes
+
+- Changed README
+- Disabled tooltips in charts
+- Optimized code
+
 ## Version 0.13 Beta
 
 ### New features

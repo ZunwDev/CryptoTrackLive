@@ -8,8 +8,14 @@
   import sortDesc from "svelte-awesome/icons/sortDesc";
   import sort from "svelte-awesome/icons/sort";
   import Data from "./Data.svelte";
-  import { entryStore, sortDirStore, sortByStore } from "./store";
+  import { entryStore, sortDirStore, sortByStore, dataLoading } from "./store";
   import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
+
+  let currentLoadingState: boolean = true;
+
+  $: {
+    currentLoadingState = $dataLoading;
+  }
 
   $: currentEntry = $entryStore;
   let entryButton: HTMLElement | null;
@@ -97,11 +103,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<section class="flex items-center justify-center w-full py-8">
-  <h2 class="text-2xl text-text dark:text-dark-text min-w-[360px]">Cryptocurrency Prices Live</h2>
+<section class="flex items-center justify-center w-full py-8 min-w-[360px]">
+  <h2 class="text-2xl text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
 </section>
 
-<section class="flex items-center justify-center w-full">
+<section class="relative flex items-center justify-center w-full">
+  {#if currentLoadingState}
+    <div class="absolute">
+      <div class="lds-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  {/if}
   <div class="flex flex-col pb-48 overflow-auto">
     <!-- Table container with potential overflow -->
     <div class="relative overflow-auto">
@@ -132,7 +148,6 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Component or data rendering for table body -->
           <Data />
         </tbody>
       </table>

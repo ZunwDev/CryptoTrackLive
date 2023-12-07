@@ -67,15 +67,28 @@ export function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, 
   }
 }
 
-export function getUnixTimeFor7DaysAgoAt8AM() {
+export function getUnixTimeFor7DaysAgo() {
   const today = new Date();
   const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-  sevenDaysAgo.setUTCHours(8, 0, 0, 0);
+  sevenDaysAgo.setUTCHours(0, 0, 0, 0);
   return sevenDaysAgo.getTime();
 }
 
-export function getCurrentUnixTimeAt8AM() {
+export function getCurrentUnixTime() {
   const currentDate = new Date();
-  currentDate.setUTCHours(8, 0, 0, 0);
+  const currentHour = currentDate.getHours();
+  const firstNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(0, 1)) : currentHour;
+  const secondNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(1, 2)) : null;
+
+  if (secondNumber !== null) {
+    currentDate.setUTCHours(firstNumber, secondNumber, 0, 0);
+  } else {
+    currentDate.setUTCHours(firstNumber, 0, 0, 0);
+  }
+
   return currentDate.getTime();
+}
+
+export function handleDetailOpen(rank: number, name: string) {
+  window.location.href = `detail/${rank}/${name}`;
 }

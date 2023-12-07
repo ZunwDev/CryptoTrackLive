@@ -1,5 +1,22 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.2 Beta
+
+### New features
+
+- Added search, search between top 100 ranked cryptocurrencies
+- Added loading icon, when data are being loaded, this applies to the table, and search
+- Added no coins text, if no coins found in search
+
+### Changes
+
+- Data for charts start at 00:00 and ends at < current_hour >:00
+- Optimized code at some point
+
+### Fixes
+
+- Fixed centering of main title (crazy)
+
 ## Version 0.13.1 Beta
 
 ### New features
@@ -19,7 +36,7 @@
 
 - Added weekly charts of prices (later will be possible to change timing)
 - Added sorting for rank, coin (name), price, and volume / descending and ascending
-- Search bar can be now focused by "/"
+- Search bar can be now focused by "/" on keyboard
 
 ### Changes
 

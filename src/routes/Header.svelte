@@ -10,34 +10,188 @@
   import { currencyStore, updateRate } from "./store";
   import { writable } from "svelte/store";
   import { handleClickOutside, toggleMenu } from "../util/utils";
+  import type { CryptoData } from "./Data";
 
   $: currentCurrency = $currencyStore;
   $: currentRate = $updateRate;
 
-  const darkMode = writable(false);
-  function toggleDarkMode() {
-    darkMode.update((mode) => {
-      const newMode = !mode;
-      const isDark = document.documentElement.classList.toggle("dark", newMode);
+  async function updateAllData() {
+    await updateTable();
+  }
 
-      localStorage.setItem("color-theme", isDark ? "dark" : "");
-      const iconElement = document.getElementById("mode-icon");
-      const iconToChange = iconElement?.firstChild as HTMLElement | null;
-      iconToChange?.classList.toggle("rotate-45", !isDark);
-
-      return newMode;
-    });
+  $: {
+    updateAllData();
   }
 
   let currencyMenu: HTMLElement | null;
   let currencyButton: HTMLElement | null;
   let updateRateMenu: HTMLElement | null;
   let updateRateButton: HTMLElement | null;
-  let searchBarPCInput: HTMLElement | null;
+  let searchBarPCInput: HTMLInputElement | null;
   let searchBarPC: HTMLElement | null;
   let searchMenu: HTMLElement | null;
+  let darkModeIconElement: HTMLElement | null;
   let currencies: any[] = ["USD ($)", "EUR (€)", "GBP (£)", "AUD ($)", "CAD ($)", "BTC (₿)", "ETH (Ξ)"];
   let updateRates: any[] = [5000, 10000, 15000, 20000, 25000, 30000];
+  let tableData: CryptoData[] = [];
+  let searchLoading: boolean = true;
+
+  const darkMode = writable(false);
+  function toggleDarkMode() {
+    darkMode.update((mode) => {
+      const isDark = document.documentElement.classList.toggle("dark", !mode);
+      localStorage.setItem("color-theme", isDark ? "dark" : "");
+      const iconToChange = darkModeIconElement?.firstChild as HTMLElement | null;
+      iconToChange?.classList.toggle("rotate-45", !isDark);
+      return !mode;
+    });
+  }
+
+  async function getData() {
+    try {
+      const response = await fetch("https://api.livecoinwatch.com/coins/list", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_API_KEY,
+        },
+        body: JSON.stringify({
+          sort: "rank",
+          order: "ascending",
+          offset: 0,
+          limit: 100,
+          meta: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      return null;
+    }
+  }
+
+  async function fetchData() {
+    const data = await getData();
+    if (data) {
+      //console.log("Fetched data:", data);
+      return data;
+    }
+    return [];
+  }
+
+  async function loadTableData(): Promise<CryptoData[]> {
+    const cryptocurrencies = (await fetchData()) as CryptoData[];
+    if (cryptocurrencies.length > 0) {
+      // @ts-ignore
+      return cryptocurrencies.map((crypto) => ({
+        rank: crypto.rank || 0,
+        name: crypto.name || "-",
+        code: crypto.code || "-",
+        png64: crypto.png64 || "-",
+      }));
+    }
+    return [];
+  }
+
+  async function updateTable() {
+    const newData = await loadTableData();
+    if (newData.length > 0) {
+      tableData = newData;
+    }
+  }
+  interface NoCoinsFound {
+    name: string;
+    code: string;
+    png64: string;
+  }
+  const searchCryptocurrencies = async (searchTerm: string, limit = 10) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    tableData = await loadTableData(); // Assuming loadTableData fetches data
+    const matches = tableData.filter(
+      (crypto) =>
+        crypto.name.toLowerCase().includes(searchTermLower) || crypto.code.toLowerCase().includes(searchTermLower)
+    );
+
+    if (searchTerm === "") {
+      return matches.slice(0, limit);
+    }
+
+    if (matches.length > 0) {
+      matches.sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        const indexA = nameA.indexOf(searchTermLower);
+        const indexB = nameB.indexOf(searchTermLower);
+        if (indexA !== indexB) {
+          return indexA - indexB;
+        }
+        return nameA.length - nameB.length;
+      });
+
+      return matches.slice(0, limit);
+    } else {
+      const noCoinsFound: NoCoinsFound = { name: "No coins found", code: "", png64: "" };
+      return [noCoinsFound];
+    }
+  };
+
+  const createButton = (crypto: any) => {
+    const anchor = document.createElement("a");
+    anchor.classList.add("flex", "items-center", "h-12", "px-4", "text-left", "w-full");
+
+    if (crypto.png64) {
+      anchor.role = "button";
+      anchor.classList.add("hover:bg-accent/30", "dark:hover:bg-dark-accent/30");
+      anchor.href = `detail/${crypto.rank}/${crypto.name}`;
+      anchor.innerHTML = `
+      <div class="flex flex-row items-center gap-2">
+        <img src="${crypto.png64}" alt="${crypto.code}" loading="lazy" class="w-6 h-6 mr-2" />
+        <span class="truncate text-text dark:text-dark-text">${crypto.name}</span>
+        <span class="text-xs text-text/30 dark:text-dark-text/30">${crypto.code}</span>
+      </div>`;
+    } else {
+      anchor.innerHTML = `
+      <div class="flex flex-row items-center gap-2">
+        <span class="truncate text-text dark:text-dark-text">${crypto.name}</span>
+        <span class="text-xs text-text/30 dark:text-dark-text/30">${crypto.code}</span>
+      </div>`;
+    }
+    return anchor;
+  };
+
+  const clearSearchMenu = () => {
+    if (searchMenu) {
+      searchMenu.innerHTML = "";
+    }
+  };
+
+  let storedSearchResults: (CryptoData | NoCoinsFound)[] = [];
+  let currentSearchInput: string | undefined = "";
+
+  const displaySearchResults = async (input: string | undefined) => {
+    try {
+      searchLoading = true;
+      if (!storedSearchResults.length || currentSearchInput !== input) {
+        clearSearchMenu();
+        storedSearchResults = await searchCryptocurrencies(input as string);
+        storedSearchResults.forEach((crypto) => {
+          const button = createButton(crypto);
+          searchMenu?.appendChild(button);
+        });
+        currentSearchInput = input;
+      }
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+    } finally {
+      searchLoading = false;
+    }
+  };
 
   function updateData(
     newData: string | number,
@@ -79,16 +233,34 @@
         setTimeout(() => {
           searchBarPCInput?.focus();
           searchMenu?.classList.toggle("hidden");
+          searchLoading = true;
+          displaySearchResults(searchBarPCInput?.value);
         }, 0);
       }
     });
   });
+  let timer: number;
+  $: {
+    if (searchBarPCInput) {
+      searchBarPCInput.addEventListener("keyup", (event) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          searchLoading = true;
+          displaySearchResults(searchBarPCInput?.value);
+        }, 1000);
+      });
+    }
+  }
 
-  const iterations = 20;
-  const templateData = Array.from({ length: iterations }, (_, index) => ({
-    id: index + 1,
-    label: `Button ${index + 1}`,
-  }));
+  const toggleSearchMenu = () => {
+    if (searchMenu) {
+      searchMenu.classList.toggle("hidden");
+      if (!searchMenu.classList.contains("hidden")) {
+        searchLoading = true;
+        displaySearchResults(searchBarPCInput?.value);
+      }
+    }
+  };
 </script>
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
@@ -111,7 +283,7 @@
       >
         <Icon data={search} class="absolute inset-0 z-30 scale-125 opacity-50 left-2 top-3"></Icon>
         <input
-          on:click={() => searchMenu?.classList.toggle("hidden")}
+          on:click={() => toggleSearchMenu()}
           bind:this={searchBarPCInput}
           type="text"
           placeholder="Search coins..."
@@ -127,13 +299,16 @@
           aria-hidden="true"
           class="absolute right-0 z-50 hidden w-64 py-1 overflow-y-auto rounded-md h-72 top-12 bg-secondary dark:bg-dark-secondary"
         >
-          {#each templateData as item (item.id)}
-            <button
-              class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30"
-            >
-              {item.label}
-            </button>
-          {/each}
+          {#if searchLoading}
+            <div class="flex items-center justify-center w-full h-full">
+              <div class="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+          {/if}
         </div>
       </div>
       <!-- Search Bar Phone -->
@@ -214,7 +389,7 @@
 
       <!-- Dark Mode Toggle -->
       <button
-        id="mode-icon"
+        bind:this={darkModeIconElement}
         on:click={toggleDarkMode}
         class="relative items-center hidden w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block 2xl:block"
       >

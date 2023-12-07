@@ -6,12 +6,12 @@
   import caretDown from "svelte-awesome/icons/caretDown";
   import minus from "svelte-awesome/icons/minus";
   import type { CryptoData, HistoricalCryptoData } from "./Data";
-  import { formatNumberToHTML, getCurrentUnixTimeAt8AM, getUnixTimeFor7DaysAgoAt8AM } from "../util/utils";
+  import { formatNumberToHTML, getCurrentUnixTime, getUnixTimeFor7DaysAgo, handleDetailOpen } from "../util/utils";
   import Chart from "chart.js/auto";
-  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore } from "./store";
+  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, dataLoading } from "./store";
 
-  // Declare reactive variables
   let shortenedCurrency = "";
+  let updateInterval: number | undefined;
   let sortDirection = "";
   let entryCount = 0;
   let sortBy = "";
@@ -20,25 +20,22 @@
   onMount(async () => {
     updateCharts = async () => {
       tableData.forEach(async (item, index) => {
-        const coinCode = item.code;
-        const startTime = getUnixTimeFor7DaysAgoAt8AM();
-        const endTime = getCurrentUnixTimeAt8AM();
-
-        await updateHistoricalData(coinCode, startTime, endTime);
+        await updateHistoricalData(item.code, getUnixTimeFor7DaysAgo(), getCurrentUnixTime());
         const canvasId = `canvas-${index}`;
         const canvasElement = document && (document.getElementById(canvasId) as HTMLCanvasElement);
 
         if (canvasElement) {
           destroyChart(canvasElement);
           const prices = historicalTableData.map((item) => item.history);
-          createLineChart(canvasElement, prices);
+          const filteredArray = prices.filter((_, index) => index % 2 !== 0);
+          createLineChart(canvasElement, filteredArray);
         }
       });
     };
 
     await updateCharts();
   });
-  // Function to update all data (async)
+
   async function updateAllData() {
     await updateData();
     await updateCharts();
@@ -79,6 +76,8 @@
     } catch (error) {
       console.error("Error fetching data:", error);
       return null;
+    } finally {
+      dataLoading.set(false);
     }
   }
 
@@ -132,6 +131,7 @@
   async function loadTableData(): Promise<CryptoData[]> {
     const cryptocurrencies = (await fetchData()) as CryptoData[];
     if (cryptocurrencies.length > 0) {
+      // @ts-ignore
       return cryptocurrencies.map((crypto) => ({
         rank: crypto.rank || 0,
         name: crypto.name || "-",
@@ -151,7 +151,7 @@
     return [];
   }
 
-  async function loadHistoricalTableData(
+  async function loadHistoricalTableData( // TS = timestamp
     code: string,
     startTS: number,
     endTS: number
@@ -183,8 +183,7 @@
     const currentData = await loadTableData();
 
     currentData.forEach((crypto) => {
-      const { code, change1h } = crypto;
-      updatePreviousChange(code, change1h);
+      updatePreviousChange(crypto.code, crypto.change1h);
     });
 
     if (browser) {
@@ -235,8 +234,6 @@
     }
   }
 
-  let updateInterval: number | undefined;
-
   function stopUpdates() {
     clearInterval(updateInterval);
   }
@@ -256,10 +253,6 @@
     }
   }
 
-  function handleRowClick(rank: number, name: string) {
-    window.location.href = `view/${rank}/${name}`;
-  }
-
   function destroyChart(canvas: HTMLCanvasElement | null) {
     if (canvas) {
       const ctx = canvas.getContext("2d");
@@ -271,6 +264,18 @@
       }
     }
   }
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false },
+    },
+    scales: {
+      x: { display: false, title: { display: false, text: "Days" } },
+      y: { display: false, title: { display: false, text: "Price" } },
+    },
+  };
 
   function createLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
     const ctx = canvas?.getContext("2d");
@@ -291,52 +296,22 @@
             },
           ],
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              display: false,
-            },
-            tooltip: {
-              enabled: false,
-            },
-          },
-          scales: {
-            x: {
-              display: false,
-              title: {
-                display: false,
-                text: "Days",
-              },
-            },
-            y: {
-              display: false,
-              title: {
-                display: false,
-                text: "Price",
-              },
-            },
-          },
-        },
+        options: chartOptions,
       });
     }
   }
 
-  async function init() {
+  onMount(async () => {
     await updateData();
     trackCryptoChanges();
     document.addEventListener("visibilitychange", handleVisibilityChange);
     //startUpdates(); //uncomment for live update depending on the update rate time
-  }
-
-  onMount(() => {
-    init();
   });
 </script>
 
 {#each tableData as crypto, index}
   <tr
-    on:click={() => handleRowClick(crypto.rank, crypto.name)}
+    on:click={() => handleDetailOpen(crypto.rank, crypto.name)}
     role="button"
     class="even:bg-bg odd:bg-secondary dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
   >

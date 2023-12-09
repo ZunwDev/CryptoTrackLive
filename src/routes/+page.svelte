@@ -11,6 +11,10 @@
   let entryButton: HTMLElement | null;
   let entryMenu: HTMLElement | null;
 
+  $: {
+    currentEntry = $entryStore;
+  }
+
   let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string }[] = [
     { name: "#", sortable: true, sortBy: "rank", sortDir: "ascending" },
     { name: "Icon", sortable: false },
@@ -29,19 +33,20 @@
   const SORT_DIRECTION_ASCENDING = "ascending";
   const SORT_DIRECTION_DESCENDING = "descending";
 
-  function updateData(
-    newData: string | number,
-    element1: HTMLElement | null,
-    element2: HTMLElement | null,
-    store: any
-  ) {
+  function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
     element1?.setAttribute("aria-hidden", "true");
     element2?.setAttribute("aria-expanded", "false");
     element1?.classList.toggle("hidden");
     store.set(newData);
-    setTimeout(() => {
-      scrollToBottom();
-    }, 2000);
+    if (newData > 10) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 3000);
+    } else {
+      setTimeout(() => {
+        scrollToTop();
+      }, 1000);
+    }
   }
 
   function sortCoins(sortBy?: string) {

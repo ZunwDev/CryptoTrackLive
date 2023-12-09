@@ -16,24 +16,20 @@
   let sortDirection = "";
   let entryCount = 0;
   let sortBy = "";
-  let updateCharts = async () => {};
 
-  onMount(async () => {
-    updateCharts = async () => {
-      tableData.forEach(async (item, index) => {
-        await updateHistoricalData(item.code, getUnixTimeFor7DaysAgo(), getCurrentUnixTime());
-        const canvasElement = document && (document.getElementById(`canvas-${index}`) as HTMLCanvasElement);
-        if (canvasElement) {
-          destroyChart(canvasElement);
-          const prices = historicalTableData.map((item) => item.history);
-          const filteredArray = prices.filter((_, index) => index % 2 !== 0);
-          createLineChart(canvasElement, filteredArray);
-        }
-      });
-    };
-
-    await updateCharts();
-  });
+  async function updateCharts() {
+    if (typeof document === "undefined") return;
+    for (const [index, item] of tableData.entries()) {
+      await updateHistoricalData(item.code, getUnixTimeFor7DaysAgo(), getCurrentUnixTime());
+      const canvasElement = document.getElementById(`canvas-${index}`) as HTMLCanvasElement | null;
+      if (canvasElement) {
+        destroyChart(canvasElement);
+        const prices = historicalTableData.map((item) => item.history);
+        const filteredArray = prices.filter((_, index) => index % 2 !== 0);
+        createLineChart(canvasElement, filteredArray);
+      } else return;
+    }
+  }
 
   async function updateAllData() {
     await updateData();
@@ -60,7 +56,6 @@
           currency: shortenedCurrency,
           sort: sortBy,
           order: sortDirection,
-          offset: 0,
           limit: entryCount,
           meta: true,
         }),
@@ -179,9 +174,7 @@
   }
 
   async function trackCryptoChanges() {
-    const currentData = await loadTableData();
-
-    currentData.forEach((crypto) => {
+    tableData.forEach((crypto) => {
       updatePreviousChange(crypto.code, crypto.change1h);
     });
 
@@ -301,6 +294,7 @@
   }
 
   onMount(async () => {
+    await updateCharts();
     await updateData();
     trackCryptoChanges();
     document.addEventListener("visibilitychange", handleVisibilityChange);

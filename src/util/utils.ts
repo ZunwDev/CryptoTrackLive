@@ -30,11 +30,15 @@ export function formatNumberToHTML(number: number) {
 }
 
 export function scrollToBottom() {
+  const footerHeight = 127;
+  const scrollPosition = document.documentElement.scrollHeight - window.innerHeight - footerHeight - 50;
+
   window.scrollTo({
-    top: document.documentElement.scrollHeight,
+    top: scrollPosition,
     behavior: "smooth",
   });
 }
+
 export function scrollToTop() {
   window.scrollTo({
     top: 0,

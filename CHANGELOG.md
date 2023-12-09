@@ -1,5 +1,16 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.4 Beta
+
+### New features
+
+- Uploaded app to vercel free hosting, link: https://vercel.com/zunwdev/crypto-track
+
+### Changes
+
+- Adjusted auto-scrolling behavior when user changes entry count for coins
+- Code optimization
+
 ## Version 0.13.3 Beta
 
 ### New features

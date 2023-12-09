@@ -1,5 +1,11 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.4.1 Beta
+
+### Fixes
+
+- Fixed build errors
+
 ## Version 0.13.4 Beta
 
 ### New features

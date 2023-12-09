@@ -265,7 +265,7 @@
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
   <nav class="flex px-4 py-3 my-auto mx-auto transition-all justify-between items-center w-full min-w-[320px]">
-    <a href="${mainPageUrl}" class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
+    <a href={mainPageUrl} class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
       <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
       <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
       <span

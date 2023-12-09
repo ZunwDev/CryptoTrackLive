@@ -1,16 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import ChevronDown from "svelte-awesome/icons/chevronDown";
-  import moonO from "svelte-awesome/icons/moonO";
-  import sunO from "svelte-awesome/icons/sunO";
-  import refresh from "svelte-awesome/icons/refresh";
-  import bars from "svelte-awesome/icons/bars";
-  import search from "svelte-awesome/icons/search";
-  import { currencyStore, updateRate } from "./store";
+  import { chevronDown, moonO, sunO, refresh, bars, search } from "svelte-awesome/icons";
+  import { currencyStore, updateRate } from "../store/store";
   import { writable } from "svelte/store";
   import { handleClickOutside, toggleMenu } from "../util/utils";
-  import type { CryptoData } from "./Data";
+  import type { CryptoData } from "../types/Data";
 
   $: currentCurrency = $currencyStore;
   $: currentRate = $updateRate;
@@ -265,7 +260,7 @@
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
   <nav class="flex px-4 py-3 my-auto mx-auto transition-all justify-between items-center w-full min-w-[320px]">
-    <a href="cryptotracklive.com" class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
+    <a href="#" class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
       <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
       <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
       <span
@@ -328,7 +323,7 @@
           class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block 2xl:block"
         >
           {currentCurrency}
-          <Icon data={ChevronDown} class="scale-75 opacity-50" />
+          <Icon data={chevronDown} class="scale-75 opacity-50" />
         </button>
         <div
           bind:this={currencyMenu}
@@ -362,7 +357,7 @@
         >
           <Icon data={refresh} class="scale-100 opacity-50" />
           {currentRate / 1000}s
-          <Icon data={ChevronDown} class="scale-75 opacity-50" />
+          <Icon data={chevronDown} class="scale-75 opacity-50" />
         </button>
 
         <!-- Update Menu -->

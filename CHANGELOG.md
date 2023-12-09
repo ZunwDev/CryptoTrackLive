@@ -1,5 +1,19 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.3 Beta
+
+### New features
+
+- Added a footer to the page
+- Added error pages to all routes / WIP
+
+### Changes
+
+- Optimized code even more
+- Changed README.md a bit
+- Relocated files for better file organization
+- More preparation for detail page
+
 ## Version 0.13.2 Beta
 
 ### New features

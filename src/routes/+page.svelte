@@ -1,27 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import ChevronDown from "svelte-awesome/icons/chevronDown";
-  import angleDoubleUp from "svelte-awesome/icons/angleDoubleUp";
-  import folderOpenO from "svelte-awesome/icons/folderOpenO";
-  import sortAsc from "svelte-awesome/icons/sortAsc";
-  import sortDesc from "svelte-awesome/icons/sortDesc";
-  import sort from "svelte-awesome/icons/sort";
-  import Data from "./Data.svelte";
-  import { entryStore, sortDirStore, sortByStore, dataLoading } from "./store";
+  import { chevronDown, angleDoubleUp, folderOpenO, sortAsc, sortDesc, sort } from "svelte-awesome/icons";
+  import Data from "../components/Data.svelte";
+  import { entryStore, sortDirStore, sortByStore, dataLoading } from "../store/store";
   import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
 
-  let currentLoadingState: boolean = true;
-
-  $: {
-    currentLoadingState = $dataLoading;
-  }
-
-  $: currentEntry = $entryStore;
+  let currentLoadingState: boolean = $dataLoading;
+  let currentEntry: number = $entryStore;
   let entryButton: HTMLElement | null;
   let entryMenu: HTMLElement | null;
 
-  let names: any[] = [
+  let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string }[] = [
     { name: "#", sortable: true, sortBy: "rank", sortDir: "ascending" },
     { name: "Icon", sortable: false },
     { name: "Coin", sortable: true, sortBy: "name", sortDir: "" },
@@ -34,7 +24,10 @@
     { name: "Supply", sortable: false },
     { name: "Max S.", sortable: false },
   ];
-  let entries = [10, 25, 50, 75, 100];
+  let entries: number[] = [10, 25, 50, 75, 100];
+
+  const SORT_DIRECTION_ASCENDING = "ascending";
+  const SORT_DIRECTION_DESCENDING = "descending";
 
   function updateData(
     newData: string | number,
@@ -58,7 +51,8 @@
     const allSortable = names.filter((item) => item.sortDir !== undefined);
 
     if (selectedName) {
-      const currentDir = selectedName.sortDir === "ascending" ? "descending" : "ascending";
+      const currentDir =
+        selectedName.sortDir === SORT_DIRECTION_ASCENDING ? SORT_DIRECTION_DESCENDING : SORT_DIRECTION_ASCENDING;
 
       allSortable.forEach((element) => {
         element.sortDir = "";
@@ -78,33 +72,31 @@
     }
   }
 
-  onMount(() => {
-    document.body.classList.add("bg-bg", "dark:bg-dark-bg");
-    entryButton = document.getElementById("entries-button");
-    entryMenu = document.getElementById("entries-menu");
+  function handleWindowClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target === entryButton || (entryButton && entryButton.contains(target))) {
+      event.stopPropagation();
+      toggleMenu(entryMenu, entryButton, entryMenu);
+    } else {
+      handleClickOutside(event, entryMenu, entryButton);
+    }
+  }
 
-    window.addEventListener("click", (event) => {
-      const target = event.target as HTMLElement;
-      if (target === entryButton || (entryButton && entryButton.contains(target))) {
-        event.stopPropagation();
-        toggleMenu(entryMenu, entryButton, entryMenu);
-      } else {
-        handleClickOutside(event, entryMenu, entryButton);
-      }
-    });
+  onMount(() => {
+    window.addEventListener("click", handleWindowClick);
   });
 </script>
 
 <svelte:head>
   <title>Home</title>
-  <meta name="description" content="Track crypto market live" />
+  <meta name="App for crypto tracking" content="Track crypto market live" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<section class="flex items-center justify-center w-full py-8 min-w-[360px]">
-  <h2 class="text-2xl text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
+<section class="flex items-center justify-center w-full py-8 min-w-[320px]">
+  <h2 class="2xl:text-2xl sm:text-2xl xs:text-lg text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
 </section>
 
 <section class="relative flex items-center justify-center w-full">
@@ -118,7 +110,7 @@
       </div>
     </div>
   {/if}
-  <div class="flex flex-col pb-48 overflow-auto">
+  <div class="flex flex-col pb-48">
     <!-- Table container with potential overflow -->
     <div class="relative overflow-auto">
       <table class="border border-secondary dark:border-dark-secondary">
@@ -167,17 +159,19 @@
       <!-- Entries Button (always on the right) -->
       <div class="relative">
         <button
+          bind:this={entryButton}
           id="entries-button"
           aria-expanded="false"
           class="flex items-center px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:hidden sm:hidden md:block 2xl:block"
         >
           <Icon data={folderOpenO} class="opacity-50" />
           {currentEntry} Coins
-          <Icon data={ChevronDown} class="scale-75 opacity-50" />
+          <Icon data={chevronDown} class="scale-75 opacity-50" />
         </button>
 
         <!-- Dropdown menu for entries -->
         <div
+          bind:this={entryMenu}
           id="entries-menu"
           tabindex="-1"
           aria-hidden="true"

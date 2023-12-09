@@ -9,6 +9,8 @@
 }
 body {
   @apply font-poppins;
+  @apply bg-bg;
+  @apply dark:bg-dark-bg;
 }
 
 .lds-ring {

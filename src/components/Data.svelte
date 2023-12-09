@@ -2,13 +2,14 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import Icon from "svelte-awesome";
-  import caretUp from "svelte-awesome/icons/caretUp";
-  import caretDown from "svelte-awesome/icons/caretDown";
-  import minus from "svelte-awesome/icons/minus";
-  import type { CryptoData, HistoricalCryptoData } from "./Data";
+  import { caretDown, caretUp, minus } from "svelte-awesome/icons";
+  import type { CryptoData, HistoricalCryptoData } from "../types/Data";
   import { formatNumberToHTML, getCurrentUnixTime, getUnixTimeFor7DaysAgo, handleDetailOpen } from "../util/utils";
   import Chart from "chart.js/auto";
-  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, dataLoading } from "./store";
+  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, dataLoading } from "../store/store";
+
+  // Constants
+  const API_KEY = import.meta.env.VITE_API_KEY;
 
   let shortenedCurrency = "";
   let updateInterval: number | undefined;
@@ -21,9 +22,7 @@
     updateCharts = async () => {
       tableData.forEach(async (item, index) => {
         await updateHistoricalData(item.code, getUnixTimeFor7DaysAgo(), getCurrentUnixTime());
-        const canvasId = `canvas-${index}`;
-        const canvasElement = document && (document.getElementById(canvasId) as HTMLCanvasElement);
-
+        const canvasElement = document && (document.getElementById(`canvas-${index}`) as HTMLCanvasElement);
         if (canvasElement) {
           destroyChart(canvasElement);
           const prices = historicalTableData.map((item) => item.history);
@@ -55,7 +54,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_API_KEY,
+          "x-api-key": API_KEY,
         },
         body: JSON.stringify({
           currency: shortenedCurrency,
@@ -87,7 +86,7 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_API_KEY,
+          "x-api-key": API_KEY,
         },
         body: JSON.stringify({
           currency: shortenedCurrency,

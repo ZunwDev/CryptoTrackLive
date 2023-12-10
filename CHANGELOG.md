@@ -1,5 +1,21 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.4.3 Beta
+
+### Changes
+
+- Changed how search works, now should be more faster
+- Made color for light mode more brighter
+- More adjustments for responsiveness, when on phone, only 5 main columns will be visible
+- Removed icon column from table, added it to coin instead
+- Added padding and centered text in the last line in the footer
+- Changed README, to be more describeful
+- Optimized code
+
+### Fixes
+
+- Fixed footer for phones (removed the black bar below it)
+
 ## Version 0.13.4.2 Beta
 
 ### New features

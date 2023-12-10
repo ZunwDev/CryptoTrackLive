@@ -6,16 +6,14 @@
   import type { CryptoData, HistoricalCryptoData } from "../types/Data";
   import { formatNumberToHTML, getCurrentUnixTime, getUnixTimeFor7DaysAgo, handleDetailOpen } from "../util/utils";
   import Chart from "chart.js/auto";
-  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, dataLoading } from "../store/store";
+  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore } from "../store/store";
+  import { getData, getHistoricalData } from "../util/api";
 
-  // Constants
-  const API_KEY = import.meta.env.VITE_API_KEY;
-
-  let shortenedCurrency = "";
+  let shortenedCurrency: string | undefined;
   let updateInterval: number | undefined;
-  let sortDirection = "";
-  let entryCount = 0;
-  let sortBy = "";
+  let sortDirection: string | undefined;
+  let entryCount: number | undefined;
+  let sortBy: string | undefined;
 
   async function updateCharts() {
     if (typeof document === "undefined") return;
@@ -44,106 +42,24 @@
     updateAllData();
   }
 
-  async function getData() {
-    try {
-      dataLoading.set(true);
-      const response = await fetch("https://api.livecoinwatch.com/coins/list", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-        },
-        body: JSON.stringify({
-          currency: shortenedCurrency,
-          sort: sortBy,
-          order: sortDirection,
-          limit: entryCount,
-          meta: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      return null;
-    } finally {
-      dataLoading.set(false);
-    }
-  }
-
-  async function getHistoricalData(code: string, startTS: number, endTS: number) {
-    try {
-      const response = await fetch("https://api.livecoinwatch.com/coins/single/history", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-        },
-        body: JSON.stringify({
-          currency: shortenedCurrency,
-          code: code,
-          meta: true,
-          start: startTS,
-          end: endTS,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      return null;
-    }
-  }
-
-  async function fetchData() {
-    const data = await getData();
-    if (data) {
-      //console.log("Fetched data:", data);
-      return data;
-    }
-    return [];
-  }
-
-  async function fetchHistoricalData(code: string, startTS: number, endTS: number) {
-    const data = await getHistoricalData(code, startTS, endTS);
-    if (data) {
-      //console.log("Fetched data:", data);
-      return data;
-    }
-    return [];
-  }
-
   async function loadTableData(): Promise<CryptoData[]> {
-    const cryptocurrencies = (await fetchData()) as CryptoData[];
-    if (cryptocurrencies.length > 0) {
-      // @ts-ignore
-      return cryptocurrencies.map((crypto) => ({
-        rank: crypto.rank || 0,
-        name: crypto.name || "-",
-        code: crypto.code || "-",
-        rate: crypto.rate || 0,
-        change: crypto.change || 0,
-        cap: crypto.cap || 0,
-        volume: crypto.volume || 0,
-        circulatingSupply: crypto.circulatingSupply || 0,
-        totalSupply: crypto.totalSupply || 0,
-        png64: crypto.png64 || "-",
-        change1h: crypto.delta.hour,
-        change24h: crypto.delta.day,
-        changeStatus: getChangeStatus(crypto.code, crypto.delta.hour), // Store change status
-      }));
-    }
-    return [];
+    const cryptocurrencies = (await getData(shortenedCurrency, sortBy, sortDirection, entryCount)) as CryptoData[];
+    //@ts-ignore
+    return cryptocurrencies.map((crypto) => ({
+      rank: crypto.rank || 0,
+      name: crypto.name || "-",
+      code: crypto.code || "-",
+      rate: crypto.rate || 0,
+      change: crypto.change || 0,
+      cap: crypto.cap || 0,
+      volume: crypto.volume || 0,
+      circulatingSupply: crypto.circulatingSupply || 0,
+      totalSupply: crypto.totalSupply || 0,
+      png64: crypto.png64 || "-",
+      change1h: crypto.delta.hour || 0,
+      change24h: crypto.delta.day || 0,
+      changeStatus: getChangeStatus(crypto.code, crypto.delta.hour),
+    }));
   }
 
   async function loadHistoricalTableData( // TS = timestamp
@@ -151,7 +67,7 @@
     startTS: number,
     endTS: number
   ): Promise<HistoricalCryptoData[]> {
-    const response = await fetchHistoricalData(code, startTS, endTS);
+    const response = await getHistoricalData(code, shortenedCurrency, startTS, endTS);
 
     if (response && Array.isArray(response.history)) {
       return response.history.map((item: any) => ({
@@ -169,9 +85,7 @@
 
   if (browser) {
     const storedPreviousChanges = localStorage.getItem("previousChanges");
-    if (storedPreviousChanges) {
-      previousChanges = JSON.parse(storedPreviousChanges);
-    }
+    storedPreviousChanges && (previousChanges = JSON.parse(storedPreviousChanges));
   }
 
   async function trackCryptoChanges() {
@@ -209,22 +123,18 @@
 
   function displayCurrencyName(crypto: CryptoData) {
     const divElement = document.createElement("div");
-    divElement.innerHTML = `<span class="font-semibold text-text dark:text-dark-text">${crypto.code}</span><span class="block text-sm text-text/30 dark:text-dark-text/30">${crypto.name}</span>`;
+    divElement.innerHTML = `<span class="font-semibold text-text xs:text-xs sm:text-base 2xl:text-base dark:text-dark-text">${crypto.code}</span><span class="block text-sm xs:text-xs sm:text-base 2xl:text-base text-text/30 dark:text-dark-text/30">${crypto.name}</span>`;
     return divElement;
   }
 
   async function updateData() {
     const newData = await loadTableData();
-    if (newData.length > 0) {
-      tableData = newData;
-    }
+    newData.length > 0 && (tableData = newData);
   }
 
   async function updateHistoricalData(code: string, startTS: number, endTS: number) {
     const newData = await loadHistoricalTableData(code, startTS, endTS);
-    if (newData.length > 0) {
-      historicalTableData = newData;
-    }
+    newData.length > 0 && (historicalTableData = newData);
   }
 
   function stopUpdates() {
@@ -282,8 +192,10 @@
               label: "",
               fill: true,
               data: prices,
-              borderColor: "magenta",
-              backgroundColor: "rgba(143, 77, 151, 0.7)",
+              borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
+              backgroundColor: document.body.classList.contains("dark")
+                ? "rgba(143, 77, 151, 0.7)"
+                : "rgba(143, 77, 151, 0.4)",
               borderWidth: 1,
               pointRadius: 0, // Hide points
             },
@@ -309,19 +221,34 @@
     role="button"
     class="even:bg-bg odd:bg-secondary dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
   >
-    <td class="px-4 py-2 text-text/30 dark:text-dark-text/30">{crypto.rank}</td>
-    <td class="px-4 py-2"><img src={crypto.png64} alt={crypto.code} loading="lazy" class="w-8 h-8" /></td>
-    <td class="px-4 py-2">
+    <td class="py-2 xs:pl-2 sm:px-4 2xl:px-4 text-text/30 dark:text-dark-text/30 xs:text-xs sm:text-base 2xl:text-base"
+      >{crypto.rank}</td
+    >
+    <td class="flex flex-row items-center gap-2 py-2 sm:px-4 2xl:px-4">
+      <img src={crypto.png64} alt={crypto.code} loading="lazy" class="w-6 h-6 sm:w-8 sm:h-8 2xl:w-8 2xl:h-8" />
       {@html displayCurrencyName(crypto).outerHTML}
     </td>
-    <td class="px-4 py-2 text-text dark:text-dark-text">
+    <td class="hidden py-2 sm:px-2 2xl:px-2 text-text dark:text-dark-text sm:table-cell 2xl:table-cell">
       <canvas id={`canvas-${index}`} width="100" height="0" class="py-2"></canvas>
     </td>
-    <td class="px-4 py-2">
-      <span class="text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
-      {@html formatNumberToHTML(crypto.rate).outerHTML}
+    <td class="py-2 sm:px-4 2xl:px-4">
+      <!-- On smaller screens (xs) -->
+      <div class="xs:flex xs:flex-col xs:items-center sm:hidden 2xl:hidden">
+        <span class="xs:text-xs text-text/30 dark:text-dark-text/30">
+          {shortenedCurrency}
+        </span>
+        {@html formatNumberToHTML(crypto.rate).outerHTML}
+      </div>
+
+      <!-- On larger screens (sm and above) -->
+      <div class="hidden sm:flex sm:justify-between sm:items-center 2xl:justify-start 2xl:items-center">
+        <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
+          {shortenedCurrency}
+        </span>
+        {@html formatNumberToHTML(crypto.rate).outerHTML}
+      </div>
     </td>
-    <td class="px-4 py-2">
+    <td class="py-2 sm:px-4 2xl:px-4 xs:text-xs sm:text-base 2xl:text-base">
       <span
         class={crypto.changeStatus === "+"
           ? "text-lime"
@@ -329,17 +256,16 @@
             ? "text-red"
             : "text-text/50 dark:text-dark-text/50"}
       >
-        {((Math.abs(crypto.change1h * 100 - 100) * 100) / 100).toFixed(2)}%
-        {#if crypto.changeStatus === "+"}
-          <Icon data={caretUp} class="scale-75 fill-lime" />
+        {((Math.abs(crypto.change1h * 100 - 100) * 100) / 100).toFixed(2)}%{#if crypto.changeStatus === "+"}
+          <Icon data={caretUp} class="xs:scale-50 sm:scale-75 2xl:scale-75 fill-lime" />
         {:else if crypto.changeStatus === "-"}
-          <Icon data={caretDown} class="scale-75 fill-red" />
+          <Icon data={caretDown} class="xs:scale-50 sm:scale-75 2xl:scale-75 fill-red" />
         {:else}
-          <Icon data={minus} class="scale-75 fill-text/50 dark:fill-dark-text/50" />
+          <Icon data={minus} class="xs:scale-50 sm:scale-75 2xl:scale-75 fill-text/50 dark:fill-dark-text/50" />
         {/if}
       </span>
     </td>
-    <td class="px-4 py-2">
+    <td class="py-2 sm:px-4 2xl:px-4 xs:text-xs sm:text-base 2xl:text-base">
       <span
         class={crypto.changeStatus === "+"
           ? "text-lime"
@@ -347,28 +273,27 @@
             ? "text-red"
             : "text-text/50 dark:text-dark-text/50"}
       >
-        {((Math.abs(crypto.change24h * 100 - 100) * 100) / 100).toFixed(2)}%
-        {#if crypto.changeStatus === "+"}
-          <Icon data={caretUp} class="scale-75 fill-lime" />
+        {((Math.abs(crypto.change24h * 100 - 100) * 100) / 100).toFixed(2)}%{#if crypto.changeStatus === "+"}
+          <Icon data={caretUp} class="xs:scale-50 sm:scale-75 2xl:scale-75 fill-lime" />
         {:else if crypto.changeStatus === "-"}
-          <Icon data={caretDown} class="scale-75 fill-red" />
+          <Icon data={caretDown} class="xs:scale-50 sm:scale-75 2xl:scale-75 fill-red" />
         {:else}
-          <Icon data={minus} class="scale-75 fill-text/50 dark:fill-dark-text/50" />
+          <Icon data={minus} class="xs:scale-50 sm:scale-75 2xl:scale-75 fill-text/50 dark:fill-dark-text/50" />
         {/if}
       </span>
     </td>
-    <td class="px-4 py-2">
+    <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
       <span class="text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
       {@html formatNumberToHTML(crypto.cap).outerHTML}
     </td>
-    <td class="px-4 py-2">
+    <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
       <span class="text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
       {@html formatNumberToHTML(crypto.volume).outerHTML}
     </td>
-    <td class="px-4 py-2">
+    <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
       {@html formatNumberToHTML(crypto.circulatingSupply).outerHTML}
     </td>
-    <td class="px-4 py-2">
+    <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
       {@html formatNumberToHTML(crypto.totalSupply).outerHTML}
     </td>
   </tr>

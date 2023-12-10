@@ -1,9 +1,30 @@
 # CryptoTrackLive
 
-##### Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more
+## Description
 
-### How it looks
+Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more
+
+#### Try it yourself: https://cryptotrack-live.vercel.app
+
+## Features
+
+- Responsive design
+- Live data (live data are currently off, due to daily API limitations)
+- Sort coins directly in table
+- Search coins
+- View coin details - WIP
+- Minimalistic design
+- Dark/light mode
+- Currency convert
+
+- More features to come
+
+#### Check CHANGELOG.md for updates & changes
+
+## License
+
+[MIT](https://github.com/ZunwDev/CryptoTrack/blob/main/LICENSE)
+
+### How it looks:
 
 ![sneakpeek-image](src/lib/images/Screenshot_1.png)
-
-#### Check CHANGELOG.md for updates

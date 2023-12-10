@@ -8,8 +8,8 @@ export function formatNumberToHTML(number: number) {
 
   const decimalClass =
     decimalValue === "00" || decimalValue === "000"
-      ? "text-text/30 dark:text-dark-text/30"
-      : "text-text dark:text-dark-text";
+      ? "text-text/30 dark:text-dark-text/30 xs:text-xs sm:text-base 2xl:text-base"
+      : "text-text dark:text-dark-text xs:text-xs sm:text-base 2xl:text-base";
 
   const spanElement = document.createElement("span");
 
@@ -21,11 +21,11 @@ export function formatNumberToHTML(number: number) {
       maximumFractionDigits: digits,
     });
 
-    spanElement.innerHTML = `<span class="text-text dark:text-dark-text">${integerValue}</span>`;
+    spanElement.innerHTML = `<span class="text-text dark:text-dark-text xs:text-xs sm:text-base 2xl:text-base">${integerValue}</span>`;
     return spanElement;
   }
 
-  spanElement.innerHTML = `<span class="text-text dark:text-dark-text">${integerValue}</span><span class="${decimalClass}">.${decimalValue}</span><span class="text-sm text-text dark:text-dark-text">${suffixes[suffixNum]}</span>`;
+  spanElement.innerHTML = `<span class="text-text dark:text-dark-text xs:text-xs sm:text-base 2xl:text-base">${integerValue}</span><span class="${decimalClass}">.${decimalValue}</span><span class="text-sm text-text xs:text-xs sm:text-base 2xl:text-base dark:text-dark-text">${suffixes[suffixNum]}</span>`;
   return spanElement;
 }
 

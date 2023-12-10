@@ -5,6 +5,7 @@
   import Data from "../components/Data.svelte";
   import { entryStore, sortDirStore, sortByStore, dataLoading } from "../store/store";
   import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
+  import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "../util/constants";
 
   let currentLoadingState: boolean = $dataLoading;
   let currentEntry: number = $entryStore;
@@ -16,23 +17,18 @@
     currentLoadingState = $dataLoading;
   }
 
-  let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string }[] = [
+  let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string; hiddenOnSmall?: boolean }[] = [
     { name: "#", sortable: true, sortBy: "rank", sortDir: "ascending" },
-    { name: "Icon", sortable: false },
     { name: "Coin", sortable: true, sortBy: "name", sortDir: "" },
-    { name: "Weekly", sortable: false },
+    { name: "Weekly", sortable: false, hiddenOnSmall: true },
     { name: "Price", sortable: true, sortBy: "price", sortDir: "" },
     { name: "1h", sortable: false },
     { name: "24h", sortable: false },
-    { name: "Market Cap", sortable: false },
-    { name: "Volume", sortable: true, sortBy: "volume", sortDir: "" },
-    { name: "Supply", sortable: false },
-    { name: "Max S.", sortable: false },
+    { name: "Market Cap", sortable: false, hiddenOnSmall: true },
+    { name: "Volume", sortable: true, sortBy: "volume", sortDir: "", hiddenOnSmall: true },
+    { name: "Supply", sortable: false, hiddenOnSmall: true },
+    { name: "Max S.", sortable: false, hiddenOnSmall: true },
   ];
-  let entries: number[] = [10, 25, 50, 75, 100];
-
-  const SORT_DIRECTION_ASCENDING = "ascending";
-  const SORT_DIRECTION_DESCENDING = "descending";
 
   function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
     element1?.setAttribute("aria-hidden", "true");
@@ -95,7 +91,11 @@
 
 <svelte:head>
   <title>Home</title>
-  <meta name="App for crypto tracking" content="Track crypto market live" />
+  <meta charset="UTF-8" />
+  <meta name="description" content="App for crypto tracking" />
+  <meta name="author" content="ZunwDev" />
+  <meta name="keywords" content="HTML, CSS, JavaScript, Svelte" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
@@ -116,17 +116,21 @@
       </div>
     </div>
   {/if}
-  <div class="flex flex-col pb-48">
+  <div class="flex flex-col pb-48 overflow-auto">
     <!-- Table container with potential overflow -->
-    <div class="relative overflow-auto">
-      <table class="border border-secondary dark:border-dark-secondary">
+    <div class="overflow-x-auto">
+      <table class="border table-auto border-secondary dark:border-dark-secondary">
         <thead>
           <!-- Table header with dynamically generated columns -->
           <tr class="even:bg-secondary odd:bg-bg dark:even:bg-dark-secondary dark:odd:bg-dark-bg">
-            {#each names as name}
+            {#each names as name, index}
               <!-- Table header columns -->
               <th
-                class="px-4 py-2 text-text dark:text-dark-text {name.sortable ? 'cursor-pointer' : ''}"
+                class="sm:px-4 2xl:px-4 py-2 xs:text-xs
+                     {index === 0 ? 'px-2' : index < 2 ? 'xs:px-0.5' : index >= 4 ? 'px-2' : 'xs:px-8'} 
+                     sm:text-base 2xl:text-base text-text dark:text-dark-text
+                     {name.hiddenOnSmall ? 'hidden sm:table-cell 2xl:table-cell' : 'sm:table-cell 2xl:table-cell'} 
+                     {name.sortable ? 'cursor-pointer' : ''}"
                 on:click={() => {
                   if (name.sortable) sortCoins(name.sortBy);
                 }}
@@ -184,7 +188,7 @@
           class="absolute right-0 z-50 hidden w-32 py-1 mt-2 rounded-md top-12 bg-secondary dark:bg-dark-secondary"
         >
           <!-- Entry selection buttons -->
-          {#each entries as entryItem}
+          {#each ENTRY_AMOUNT as entryItem}
             <button
               on:click={() => updateData(entryItem, entryMenu, entryButton, entryStore)}
               class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {entryItem ===

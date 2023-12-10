@@ -3,9 +3,9 @@
   import Icon from "svelte-awesome";
 </script>
 
-<footer class="bg-secondary dark:bg-dark-secondary">
+<footer class="w-full px-4 bg-secondary dark:bg-dark-secondary">
   <div class="flex flex-col items-center justify-center py-8">
-    <p class="text-text dark:text-dark-text">Made with ❤️ by ZunwDev</p>
+    <p class="text-text dark:text-dark-text xs:text-sm sm:text-base 2xl:text-base">Made with ❤️ by ZunwDev</p>
     <div class="flex mt-4 space-x-2">
       <a
         href="https://github.com/ZunwDev"
@@ -16,7 +16,7 @@
       </a>
       <!-- Add other social icons similarly -->
     </div>
-    <p class="mt-4 text-sm text-text dark:text-dark-text">
+    <p class="mt-4 text-center xs:text-xs sm:text-sm 2xl:text-sm text-text dark:text-dark-text">
       &copy; 2023 CryptoTrackLive. All rights reserved. <a
         class="underline hover:text-text/30 dark:hover:text-dark-text/30"
         href="https://github.com/ZunwDev/CryptoTrack/blob/main/LICENSE"

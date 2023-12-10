@@ -6,6 +6,8 @@
   import { writable } from "svelte/store";
   import { handleClickOutside, toggleMenu } from "../util/utils";
   import type { CryptoData } from "../types/Data";
+  import { CURRENCIES, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "../util/constants";
+  import { getData } from "../util/api";
 
   $: currentCurrency = $currencyStore;
   $: currentRate = $updateRate;
@@ -15,6 +17,8 @@
   }
 
   $: {
+    currentCurrency = $currencyStore;
+    currentRate = $updateRate;
     updateAllData();
   }
 
@@ -26,8 +30,6 @@
   let searchBarPC: HTMLElement | null;
   let searchMenu: HTMLElement | null;
   let darkModeIconElement: HTMLElement | null;
-  let currencies: any[] = ["USD ($)", "EUR (€)", "GBP (£)", "AUD ($)", "CAD ($)", "BTC (₿)", "ETH (Ξ)"];
-  let updateRates: any[] = [5000, 10000, 15000, 20000, 25000, 30000];
   let tableData: CryptoData[] = [];
   let searchLoading: boolean = true;
 
@@ -42,46 +44,8 @@
     });
   }
 
-  async function getData() {
-    try {
-      const response = await fetch("https://api.livecoinwatch.com/coins/list", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_API_KEY,
-        },
-        body: JSON.stringify({
-          sort: "rank",
-          order: "ascending",
-          offset: 0,
-          limit: 100,
-          meta: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      return null;
-    }
-  }
-
-  async function fetchData() {
-    const data = await getData();
-    if (data) {
-      //console.log("Fetched data:", data);
-      return data;
-    }
-    return [];
-  }
-
   async function loadTableData(): Promise<CryptoData[]> {
-    const cryptocurrencies = (await fetchData()) as CryptoData[];
+    const cryptocurrencies = (await getData("USD", null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
     if (cryptocurrencies.length > 0) {
       // @ts-ignore
       return cryptocurrencies.map((crypto) => ({
@@ -96,18 +60,17 @@
 
   async function updateTable() {
     const newData = await loadTableData();
-    if (newData.length > 0) {
-      tableData = newData;
-    }
+    newData.length > 0 && (tableData = newData);
   }
   interface NoCoinsFound {
     name: string;
     code: string;
     png64: string;
+    rank: number | null;
   }
   const searchCryptocurrencies = async (searchTerm: string, limit = 10) => {
     const searchTermLower = searchTerm.toLowerCase();
-    tableData = await loadTableData(); // Assuming loadTableData fetches data
+    tableData = await loadTableData();
     const matches = tableData.filter(
       (crypto) =>
         crypto.name.toLowerCase().includes(searchTermLower) || crypto.code.toLowerCase().includes(searchTermLower)
@@ -131,39 +94,8 @@
 
       return matches.slice(0, limit);
     } else {
-      const noCoinsFound: NoCoinsFound = { name: "No coins found", code: "", png64: "" };
+      const noCoinsFound: NoCoinsFound = { name: "No coins found.", code: "", png64: "", rank: null };
       return [noCoinsFound];
-    }
-  };
-
-  const createButton = (crypto: any) => {
-    const anchor = document.createElement("a");
-    anchor.classList.add("flex", "items-center", "h-12", "px-4", "text-left", "w-full");
-
-    if (crypto.png64) {
-      anchor.role = "button";
-      anchor.classList.add("hover:bg-accent/30", "dark:hover:bg-dark-accent/30");
-      anchor.href = `/detail/${crypto.rank}/${crypto.name}`;
-      anchor.onclick = () => searchMenu?.classList.toggle("hidden");
-      anchor.innerHTML = `
-      <div class="flex flex-row items-center gap-2">
-        <img src="${crypto.png64}" alt="${crypto.code}" loading="lazy" class="w-6 h-6 mr-2" />
-        <span class="truncate text-text dark:text-dark-text">${crypto.name}</span>
-        <span class="text-xs text-text/30 dark:text-dark-text/30">${crypto.code}</span>
-      </div>`;
-    } else {
-      anchor.innerHTML = `
-      <div class="flex flex-row items-center gap-2">
-        <span class="truncate text-text dark:text-dark-text">${crypto.name}</span>
-        <span class="text-xs text-text/30 dark:text-dark-text/30">${crypto.code}</span>
-      </div>`;
-    }
-    return anchor;
-  };
-
-  const clearSearchMenu = () => {
-    if (searchMenu) {
-      searchMenu.innerHTML = "";
     }
   };
 
@@ -174,12 +106,7 @@
     try {
       searchLoading = true;
       if (!storedSearchResults.length || currentSearchInput !== input) {
-        clearSearchMenu();
         storedSearchResults = await searchCryptocurrencies(input as string);
-        storedSearchResults.forEach((crypto) => {
-          const button = createButton(crypto);
-          searchMenu?.appendChild(button);
-        });
         currentSearchInput = input;
       }
     } catch (error) {
@@ -309,6 +236,28 @@
                 <div></div>
               </div>
             </div>
+          {:else}
+            {#each storedSearchResults as result}
+              {#if result.png64}
+                <a
+                  role="button"
+                  on:click={() => searchMenu?.classList.toggle("hidden")}
+                  href={`/detail/${result.rank}/${result.name}`}
+                  class="flex items-center w-full h-12 px-4 text-left hover:bg-accent/30 dark:hover:bg-dark-accent/30"
+                >
+                  <div class="flex flex-row items-center gap-2">
+                    <img src={result.png64} alt={result.code} loading="lazy" class="w-6 h-6 mr-2" />
+                    <span class="truncate text-text dark:text-dark-text">{result.name}</span>
+                    <span class="text-xs text-text/30 dark:text-dark-text/30">{result.code}</span>
+                  </div>
+                </a>
+              {:else}
+                <div class="flex flex-row items-center justify-center h-full gap-2">
+                  <span class="truncate text-text dark:text-dark-text">{result.name}</span>
+                  <span class="text-xs text-text/30 dark:text-dark-text/30">{result.code}</span>
+                </div>
+              {/if}
+            {/each}
           {/if}
         </div>
       </div>
@@ -338,7 +287,7 @@
           class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-12 h-fit bg-secondary dark:bg-dark-secondary"
         >
           <!-- Currency Buttons -->
-          {#each currencies as currencyItem}
+          {#each CURRENCIES as currencyItem}
             {#if currencyItem === "BTC (₿)"}
               <span class="block w-full h-0.5 px-1 bg-primary dark:bg-dark-primary"></span>
             {/if}
@@ -374,7 +323,7 @@
           class="absolute right-0 z-50 hidden w-24 py-1 rounded-md top-12 h-fit bg-secondary dark:bg-dark-secondary"
         >
           <!-- Update Rate Buttons -->
-          {#each updateRates as rate}
+          {#each UPDATE_RATES as rate}
             <button
               on:click={() => updateData(rate, updateRateMenu, updateRateButton, updateRate)}
               class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {rate ===

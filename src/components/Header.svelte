@@ -143,7 +143,8 @@
     if (crypto.png64) {
       anchor.role = "button";
       anchor.classList.add("hover:bg-accent/30", "dark:hover:bg-dark-accent/30");
-      anchor.href = `detail/${crypto.rank}/${crypto.name}`;
+      anchor.href = `/detail/${crypto.rank}/${crypto.name}`;
+      anchor.onclick = () => searchMenu?.classList.toggle("hidden");
       anchor.innerHTML = `
       <div class="flex flex-row items-center gap-2">
         <img src="${crypto.png64}" alt="${crypto.code}" loading="lazy" class="w-6 h-6 mr-2" />

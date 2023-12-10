@@ -1,5 +1,16 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.4.2 Beta
+
+### New features
+
+- Hide search menu when user clicks any searched item
+
+### Fixes
+
+- Fixed stuck loading in table
+- Fixed URL stacking when going multiple times to same page
+
 ## Version 0.13.4.1 Beta
 
 ### Fixes

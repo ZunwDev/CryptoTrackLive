@@ -46,6 +46,7 @@
 
   async function getData() {
     try {
+      dataLoading.set(true);
       const response = await fetch("https://api.livecoinwatch.com/coins/list", {
         method: "POST",
         headers: {

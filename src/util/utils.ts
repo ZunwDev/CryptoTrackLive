@@ -94,5 +94,5 @@ export function getCurrentUnixTime() {
 }
 
 export function handleDetailOpen(rank: number, name: string) {
-  window.location.href = `detail/${rank}/${name}`;
+  window.location.href = `/detail/${rank}/${name}`;
 }

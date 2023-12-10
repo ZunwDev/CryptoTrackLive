@@ -13,6 +13,7 @@
 
   $: {
     currentEntry = $entryStore;
+    currentLoadingState = $dataLoading;
   }
 
   let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string }[] = [

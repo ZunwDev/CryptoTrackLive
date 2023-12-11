@@ -6,7 +6,7 @@
   import type { CryptoData, HistoricalCryptoData } from "../types/Data";
   import { formatNumberToHTML, getCurrentUnixTime, getUnixTimeFor7DaysAgo, handleDetailOpen } from "../util/utils";
   import Chart from "chart.js/auto";
-  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore } from "../store/store";
+  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, pageStore } from "../store/store";
   import { getData, getHistoricalData } from "../util/api";
 
   let shortenedCurrency: string | undefined;
@@ -14,6 +14,7 @@
   let sortDirection: string | undefined;
   let entryCount: number | undefined;
   let sortBy: string | undefined;
+  let currentPage: number | undefined;
 
   async function updateCharts() {
     if (typeof document === "undefined") return;
@@ -39,11 +40,19 @@
     entryCount = $entryStore;
     sortDirection = $sortDirStore;
     sortBy = $sortByStore;
+    currentPage = $pageStore;
     updateAllData();
   }
 
-  async function loadTableData(): Promise<CryptoData[]> {
-    const cryptocurrencies = (await getData(shortenedCurrency, sortBy, sortDirection, entryCount)) as CryptoData[];
+  export async function loadTableData(): Promise<CryptoData[]> {
+    const cryptocurrencies = (await getData(
+      shortenedCurrency,
+      sortBy,
+      sortDirection,
+      entryCount,
+      currentPage,
+      entryCount
+    )) as CryptoData[];
     //@ts-ignore
     return cryptocurrencies.map((crypto) => ({
       rank: crypto.rank || 0,

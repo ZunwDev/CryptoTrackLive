@@ -1,9 +1,18 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import { chevronDown, angleDoubleUp, folderOpenO, sortAsc, sortDesc, sort } from "svelte-awesome/icons";
+  import {
+    chevronDown,
+    angleDoubleUp,
+    folderOpenO,
+    sortAsc,
+    sortDesc,
+    sort,
+    angleDoubleLeft,
+    angleDoubleRight,
+  } from "svelte-awesome/icons";
   import Data from "../components/Data.svelte";
-  import { entryStore, sortDirStore, sortByStore, dataLoading } from "../store/store";
+  import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "../store/store";
   import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
   import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "../util/constants";
 
@@ -11,10 +20,18 @@
   let currentEntry: number = $entryStore;
   let entryButton: HTMLElement | null;
   let entryMenu: HTMLElement | null;
+  let currentPage: number = $pageStore;
+  let pageCount: number = 100 / currentEntry;
+  let sortedBy: string | undefined;
+  let sortOrder: string | undefined;
 
   $: {
     currentEntry = $entryStore;
     currentLoadingState = $dataLoading;
+    currentPage = $pageStore;
+    pageCount = 100 / currentEntry;
+    sortedBy = $sortByStore;
+    sortOrder = $sortDirStore;
   }
 
   let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string; hiddenOnSmall?: boolean }[] = [
@@ -31,6 +48,7 @@
   ];
 
   function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
+    pageStore.set(1);
     element1?.setAttribute("aria-hidden", "true");
     element2?.setAttribute("aria-expanded", "false");
     element1?.classList.toggle("hidden");
@@ -44,6 +62,26 @@
         scrollToTop();
       }, 1000);
     }
+  }
+
+  function generatePaginationLinks(currentPage: number, pageCount: number) {
+    const linksToShow = 5;
+    let startPage;
+    if (currentPage > linksToShow - 1) {
+      startPage = currentPage - linksToShow + 1;
+    } else {
+      startPage = 1;
+    }
+    const endPage = Math.min(startPage + linksToShow - 1, pageCount);
+    const links = [];
+    for (let i = startPage; i <= endPage; i++) {
+      links.push(i);
+    }
+    return links;
+  }
+
+  function updatePage(page: number) {
+    pageStore.set(page);
   }
 
   function sortCoins(sortBy?: string) {
@@ -101,8 +139,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<section class="flex items-center justify-center w-full py-8 min-w-[320px]">
+<section class="flex items-center justify-center w-full flex-col gap-2 py-8 min-w-[320px]">
   <h2 class="2xl:text-2xl sm:text-2xl xs:text-lg text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
+  <h4 class="text-text dark:text-dark-text">Sorted by {sortedBy?.toUpperCase()} - {sortOrder?.toUpperCase()}</h4>
 </section>
 
 <section class="relative flex items-center justify-center w-full">
@@ -154,25 +193,63 @@
         </tbody>
       </table>
     </div>
-    <!-- Entries Selector -->
-    <div class="flex flex-row {currentEntry > 10 ? 'justify-between' : 'justify-end'} py-4">
-      <!-- Go up button (conditionally rendered) -->
-      {#if currentEntry > 10}
-        <button
-          on:click={() => scrollToTop()}
-          class="flex items-center px-4 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
-        >
-          <Icon data={angleDoubleUp} class="scale-125 opacity-50" />
-        </button>
-      {/if}
-
-      <!-- Entries Button (always on the right) -->
+    {#if !currentLoadingState}
+      <div class="flex justify-between pt-4">
+        <!-- Go up button -->
+        <div class="relative">
+          {#if currentEntry > 10}
+            <button
+              on:click={() => scrollToTop()}
+              class="absolute left-0 inline-flex px-4 py-3 transition rounded-lg bottom-0.5 text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
+            >
+              <Icon data={angleDoubleUp} class="scale-125 opacity-50" />
+            </button>
+          {/if}
+        </div>
+        <!-- Pagination -->
+        <div class="flex items-center justify-center mx-auto">
+          <a
+            role="button"
+            on:click={() => (currentPage !== 1 ? updatePage(1) : undefined)}
+            href={currentPage !== 1 ? "/?page=1" : undefined}
+            class="px-3 py-2 rounded-tl-lg rounded-bl-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
+            1
+              ? 'opacity-70 cursor-not-allowed'
+              : 'hover:brightness-150 dark:hover:brigtness-200'}"
+            ><Icon data={angleDoubleLeft} class="scale-100 opacity-50 text-text dark:text-dark-text"></Icon></a
+          >
+          {#if pageCount > 1}
+            {#each generatePaginationLinks(currentPage, pageCount) as page}
+              <a
+                role="button"
+                href="/?page={page}"
+                on:click={() => (currentPage !== page ? updatePage(page) : undefined)}
+                class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {currentPage ===
+                page
+                  ? 'bg-accent dark:bg-dark-accent hover:brightness-150 dark:hover:brigtness-200'
+                  : 'hover:brightness-150 dark:hover:brigtness-200 bg-secondary dark:bg-dark-secondary'}">{page}</a
+              >
+            {/each}
+          {/if}
+          <a
+            role="button"
+            on:click={() => (currentPage !== pageCount ? updatePage(pageCount) : undefined)}
+            href={currentPage !== pageCount ? `/?page=${pageCount}` : undefined}
+            class="px-3 py-2 rounded-tr-lg rounded-br-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
+            pageCount
+              ? 'opacity-70 cursor-not-allowed'
+              : 'hover:brightness-150 dark:hover:brigtness-200'}"
+            ><Icon data={angleDoubleRight} class="scale-100 opacity-50 text-text dark:text-dark-text"></Icon></a
+          >
+        </div>
+      </div>
+      <!-- Entries Button -->
       <div class="relative">
         <button
           bind:this={entryButton}
           id="entries-button"
           aria-expanded="false"
-          class="flex items-center px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:hidden sm:hidden md:block 2xl:block"
+          class="absolute bottom-0.5 right-0 inline-flex px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:hidden sm:hidden md:block 2xl:block"
         >
           <Icon data={folderOpenO} class="opacity-50" />
           {currentEntry} Coins
@@ -185,13 +262,13 @@
           id="entries-menu"
           tabindex="-1"
           aria-hidden="true"
-          class="absolute right-0 z-50 hidden w-32 py-1 mt-2 rounded-md top-12 bg-secondary dark:bg-dark-secondary"
+          class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-1 bg-secondary dark:bg-dark-secondary"
         >
           <!-- Entry selection buttons -->
           {#each ENTRY_AMOUNT as entryItem}
             <button
               on:click={() => updateData(entryItem, entryMenu, entryButton, entryStore)}
-              class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {entryItem ===
+              class="inline-flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {entryItem ===
               currentEntry
                 ? '!bg-accent !dark:bg-dark-accent'
                 : ''}"
@@ -201,6 +278,6 @@
           {/each}
         </div>
       </div>
-    </div>
+    {/if}
   </div>
 </section>

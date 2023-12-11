@@ -2,9 +2,8 @@
 
 ## Description
 
-Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more
-
-#### Try it yourself: https://cryptotrack-live.vercel.app
+Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more.
+Try it yourself: https://cryptotrack-live.vercel.app
 
 ## Features
 
@@ -16,10 +15,7 @@ Track prices of many cryptocurrencies, with charts, sorting, currency converting
 - Minimalistic design
 - Dark/light mode
 - Currency convert
-
-- More features to come
-
-#### Check CHANGELOG.md for updates & changes
+- More features to come...
 
 ## License
 
@@ -28,3 +24,5 @@ Track prices of many cryptocurrencies, with charts, sorting, currency converting
 ### How it looks:
 
 ![sneakpeek-image](src/lib/images/Screenshot_1.png)
+
+#### Check CHANGELOG.md for updates & changes

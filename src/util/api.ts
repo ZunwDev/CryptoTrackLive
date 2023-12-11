@@ -1,7 +1,7 @@
 import { dataLoading } from "../store/store";
 import { API_KEY, SORT_DIRECTION_ASCENDING } from "./constants";
 
-export async function fetchData(apiEndpoint: string, requestBody: object) {
+async function fetchData(apiEndpoint: string, requestBody: object) {
   try {
     const response = await fetch(apiEndpoint, {
       method: "POST",
@@ -28,14 +28,18 @@ export async function getData(
   currency?: string | undefined | null,
   sort?: string | undefined | null,
   order?: string | undefined | null,
-  limit?: number | undefined | null
+  limit?: number | undefined | null,
+  currentPage?: number | undefined | null,
+  currentEntry?: number | undefined | null
 ) {
+  dataLoading.set(true);
   const apiEndpoint = "https://api.livecoinwatch.com/coins/list";
   const requestBody = {
     currency,
     sort: sort || "rank",
     order: order || SORT_DIRECTION_ASCENDING,
     limit: limit || 100,
+    offset: currentPage && currentEntry && currentPage * currentEntry - currentEntry,
     meta: true,
   };
   let data;

@@ -1,11 +1,18 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.5 Beta
+
+### New features
+
+- Added pagination, with entry change support
+- Added text that shows which shows current sort
+
 ## Version 0.13.4.3 Beta
 
 ### Changes
 
 - Changed how search works, now should be more faster
-- Made color for light mode more brighter
+- Made colors for light mode more brighter
 - More adjustments for responsiveness, when on phone, only 5 main columns will be visible
 - Removed icon column from table, added it to coin instead
 - Added padding and centered text in the last line in the footer

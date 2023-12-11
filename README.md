@@ -23,6 +23,6 @@ Try it yourself: https://cryptotrack-live.vercel.app
 
 ### How it looks:
 
-![sneakpeek-image](src/lib/images/Screenshot_1.png)
+![sneakpeek-image](src/lib/images/Screenshot_2.png)
 
 #### Check CHANGELOG.md for updates & changes

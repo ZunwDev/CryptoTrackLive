@@ -74,3 +74,19 @@ export async function getHistoricalData(
     // For example, dataLoading.set(false);
   }
 }
+
+export async function getOverviewData(currency: string | undefined | null) {
+  const apiEndpoint = "https://api.livecoinwatch.com/overview";
+  const requestBody = {
+    currency,
+    meta: true,
+  };
+  let data;
+  try {
+    data = await fetchData(apiEndpoint, requestBody);
+    return data;
+  } finally {
+    // Perform actions here, regardless of success or failure
+    // For example, dataLoading.set(false);
+  }
+}

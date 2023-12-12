@@ -52,3 +52,28 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* CUSTOM SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: white;
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: darkgrey;
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body {
+  scrollbar-width: thin;
+  scrollbar-color: darkgrey white;
+}

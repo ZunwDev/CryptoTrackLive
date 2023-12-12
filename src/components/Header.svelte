@@ -9,8 +9,8 @@
   import { CURRENCIES, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "../util/constants";
   import { getData } from "../util/api";
 
-  $: currentCurrency = $currencyStore;
-  $: currentRate = $updateRate;
+  let currentCurrency: string = $currencyStore;
+  let currentRate: number = $updateRate;
 
   async function updateAllData() {
     await updateTable();
@@ -45,10 +45,10 @@
   }
 
   async function loadTableData(): Promise<CryptoData[]> {
-    const cryptocurrencies = (await getData("USD", null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
-    if (cryptocurrencies.length > 0) {
+    const response = (await getData("USD", null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
+    if (response.length > 0) {
       // @ts-ignore
-      return cryptocurrencies.map((crypto) => ({
+      return response.map((crypto) => ({
         rank: crypto.rank || 0,
         name: crypto.name || "-",
         code: crypto.code || "-",
@@ -355,7 +355,6 @@
       <!-- Burger Menu (Mobile) -->
       <button
         id="burger-menu"
-        on:click={toggleDarkMode}
         class="relative items-center w-10 h-10 overflow-hidden transition rounded-lg 2xl:hidden lg:hidden md:hidden xl:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:block sm:block"
       >
         <span class="inset-0 flex items-center justify-center transition-all">

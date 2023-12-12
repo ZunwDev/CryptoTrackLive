@@ -1,5 +1,16 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.13.6 Beta
+
+### New features
+
+- Added overview for coins
+- Added custom scrollbar design (should support all most used browsers)
+
+### Changes
+
+- Updated README image
+
 ## Version 0.13.5 Beta
 
 ### New features

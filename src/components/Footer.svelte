@@ -3,7 +3,7 @@
   import Icon from "svelte-awesome";
 </script>
 
-<footer class="w-full px-4 bg-secondary dark:bg-dark-secondary">
+<footer class="w-full px-4 bg-secondary dark:bg-dark-secondary min-w-[320px]">
   <div class="flex flex-col items-center justify-center py-8">
     <p class="text-text dark:text-dark-text xs:text-sm sm:text-base 2xl:text-base">Made with ❤️ by ZunwDev</p>
     <div class="flex mt-4 space-x-2">

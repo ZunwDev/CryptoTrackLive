@@ -15,6 +15,7 @@
   import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "../store/store";
   import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
   import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "../util/constants";
+  import Overview from "../components/Overview.svelte";
 
   let currentLoadingState: boolean = $dataLoading;
   let currentEntry: number = $entryStore;
@@ -140,8 +141,12 @@
 </svelte:head>
 
 <section class="flex items-center justify-center w-full flex-col gap-2 py-8 min-w-[320px]">
-  <h2 class="2xl:text-2xl sm:text-2xl xs:text-lg text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
+  <h2 class="text-2xl text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
   <h4 class="text-text dark:text-dark-text">Sorted by {sortedBy?.toUpperCase()} - {sortOrder?.toUpperCase()}</h4>
+</section>
+
+<section class="flex flex-wrap items-center justify-center w-full gap-4 min-w-[320px] mb-4">
+  <Overview />
 </section>
 
 <section class="relative flex items-center justify-center w-full">
@@ -158,7 +163,7 @@
   <div class="flex flex-col pb-48 overflow-auto">
     <!-- Table container with potential overflow -->
     <div class="overflow-x-auto">
-      <table class="border table-auto border-secondary dark:border-dark-secondary">
+      <table class="border table-auto border-secondary dark:border-dark-secondary min-w-[320px]">
         <thead>
           <!-- Table header with dynamically generated columns -->
           <tr class="even:bg-secondary odd:bg-bg dark:even:bg-dark-secondary dark:odd:bg-dark-bg">

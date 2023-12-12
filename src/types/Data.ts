@@ -20,3 +20,11 @@ export interface HistoricalCryptoData {
   history: any;
   rate: number;
 }
+
+export interface OverviewData {
+  cap?: number;
+  volume?: number;
+  liquidity?: number;
+  btcDominance?: number;
+  [key: string]: number | undefined | "N/A";
+}

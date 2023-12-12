@@ -44,8 +44,8 @@
     updateAllData();
   }
 
-  export async function loadTableData(): Promise<CryptoData[]> {
-    const cryptocurrencies = (await getData(
+  async function loadTableData(): Promise<CryptoData[]> {
+    const response = (await getData(
       shortenedCurrency,
       sortBy,
       sortDirection,
@@ -54,7 +54,7 @@
       entryCount
     )) as CryptoData[];
     //@ts-ignore
-    return cryptocurrencies.map((crypto) => ({
+    return response.map((crypto) => ({
       rank: crypto.rank || 0,
       name: crypto.name || "-",
       code: crypto.code || "-",
@@ -98,9 +98,7 @@
   }
 
   async function trackCryptoChanges() {
-    tableData.forEach((crypto) => {
-      updatePreviousChange(crypto.code, crypto.change1h);
-    });
+    tableData.forEach((crypto) => updatePreviousChange(crypto.code, crypto.change1h));
 
     if (browser) {
       localStorage.setItem("previousChanges", JSON.stringify(previousChanges));
@@ -228,7 +226,7 @@
   <tr
     on:click={() => handleDetailOpen(crypto.rank, crypto.name)}
     role="button"
-    class="even:bg-bg odd:bg-secondary dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
+    class="even:bg-bg odd:bg-secondary max-h-[88px] dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
   >
     <td class="py-2 xs:pl-2 sm:px-4 2xl:px-4 text-text/30 dark:text-dark-text/30 xs:text-xs sm:text-base 2xl:text-base"
       >{crypto.rank}</td
@@ -246,7 +244,9 @@
         <span class="xs:text-xs text-text/30 dark:text-dark-text/30">
           {shortenedCurrency}
         </span>
-        {@html formatNumberToHTML(crypto.rate).outerHTML}
+        <span class="xs:text-xs sm:text-base 2xl:text-base">
+          {@html formatNumberToHTML(crypto.rate).outerHTML}
+        </span>
       </div>
 
       <!-- On larger screens (sm and above) -->
@@ -254,7 +254,9 @@
         <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
           {shortenedCurrency}
         </span>
-        {@html formatNumberToHTML(crypto.rate).outerHTML}
+        <span class="xs:text-xs sm:text-base 2xl:text-base">
+          {@html formatNumberToHTML(crypto.rate).outerHTML}
+        </span>
       </div>
     </td>
     <td class="py-2 sm:px-4 2xl:px-4 xs:text-xs sm:text-base 2xl:text-base">

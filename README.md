@@ -3,7 +3,7 @@
 ## Description
 
 Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more.
-Try it yourself: https://cryptotrack-live.vercel.app
+Try it yourself: [https://cryptotrack-live.vercel.app](https://crypto-track-zunwdev.vercel.app)
 
 ## Features
 

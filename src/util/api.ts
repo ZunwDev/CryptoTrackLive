@@ -1,4 +1,4 @@
-import { dataLoading } from "../store/store";
+import { dataLoading, detailLoading, secondaryDetailLoading } from "../store/store";
 import { API_KEY, SORT_DIRECTION_ASCENDING } from "./constants";
 
 async function fetchData(apiEndpoint: string, requestBody: object) {
@@ -57,6 +57,7 @@ export async function getHistoricalData(
   start: number | undefined | null,
   end: number | undefined | null
 ) {
+  secondaryDetailLoading.set(true);
   const apiEndpoint = "https://api.livecoinwatch.com/coins/single/history";
   const requestBody = {
     currency,
@@ -70,6 +71,7 @@ export async function getHistoricalData(
     data = await fetchData(apiEndpoint, requestBody);
     return data;
   } finally {
+    secondaryDetailLoading.set(false);
     // Perform actions here, regardless of success or failure
     // For example, dataLoading.set(false);
   }
@@ -86,6 +88,25 @@ export async function getOverviewData(currency: string | undefined | null) {
     data = await fetchData(apiEndpoint, requestBody);
     return data;
   } finally {
+    // Perform actions here, regardless of success or failure
+    // For example, dataLoading.set(false);
+  }
+}
+
+export async function getDataSingle(currency: string | undefined | null, code: string | undefined) {
+  detailLoading.set(true);
+  const apiEndpoint = "https://api.livecoinwatch.com/coins/single";
+  const requestBody = {
+    currency,
+    code,
+    meta: true,
+  };
+  let data;
+  try {
+    data = await fetchData(apiEndpoint, requestBody);
+    return data;
+  } finally {
+    detailLoading.set(false);
     // Perform actions here, regardless of success or failure
     // For example, dataLoading.set(false);
   }

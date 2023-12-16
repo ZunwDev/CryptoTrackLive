@@ -8,3 +8,5 @@ export const sortByStore = writable("rank");
 export const dataLoading = writable(true);
 export const pageStore = writable(1);
 export const pageCountStore = writable(entryStore);
+export const detailLoading = writable(true);
+export const secondaryDetailLoading = writable(true);

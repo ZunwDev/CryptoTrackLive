@@ -81,10 +81,6 @@
     return links;
   }
 
-  function updatePage(page: number) {
-    pageStore.set(page);
-  }
-
   function sortCoins(sortBy?: string) {
     if (!sortBy) return;
 
@@ -215,7 +211,7 @@
         <div class="flex items-center justify-center mx-auto">
           <a
             role="button"
-            on:click={() => (currentPage !== 1 ? updatePage(1) : undefined)}
+            on:click={() => (currentPage !== 1 ? pageStore.set(1) : undefined)}
             href={currentPage !== 1 ? "/?page=1" : undefined}
             class="px-3 py-2 rounded-tl-lg rounded-bl-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
             1
@@ -228,7 +224,7 @@
               <a
                 role="button"
                 href="/?page={page}"
-                on:click={() => (currentPage !== page ? updatePage(page) : undefined)}
+                on:click={() => (currentPage !== page ? pageStore.set(page) : undefined)}
                 class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {currentPage ===
                 page
                   ? 'bg-accent dark:bg-dark-accent hover:brightness-150 dark:hover:brigtness-200'
@@ -238,7 +234,7 @@
           {/if}
           <a
             role="button"
-            on:click={() => (currentPage !== pageCount ? updatePage(pageCount) : undefined)}
+            on:click={() => (currentPage !== pageCount ? pageStore.set(pageCount) : undefined)}
             href={currentPage !== pageCount ? `/?page=${pageCount}` : undefined}
             class="px-3 py-2 rounded-tr-lg rounded-br-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
             pageCount

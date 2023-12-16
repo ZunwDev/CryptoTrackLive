@@ -4,8 +4,14 @@
   import Icon from "svelte-awesome";
   import { caretDown, caretUp, minus } from "svelte-awesome/icons";
   import type { CryptoData, HistoricalCryptoData } from "../types/Data";
-  import { formatNumberToHTML, getCurrentUnixTime, getUnixTimeFor7DaysAgo, handleDetailOpen } from "../util/utils";
-  import Chart from "chart.js/auto";
+  import {
+    createLineChart,
+    destroyChart,
+    formatNumberToHTML,
+    getCurrentUnixTime,
+    getUnixTimeXDaysAgo,
+    handleDetailOpen,
+  } from "../util/utils";
   import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, pageStore } from "../store/store";
   import { getData, getHistoricalData } from "../util/api";
 
@@ -19,7 +25,7 @@
   async function updateCharts() {
     if (typeof document === "undefined") return;
     for (const [index, item] of tableData.entries()) {
-      await updateHistoricalData(item.code, getUnixTimeFor7DaysAgo(), getCurrentUnixTime());
+      await updateHistoricalData(item.code, getUnixTimeXDaysAgo(7), getCurrentUnixTime());
       const canvasElement = document.getElementById(`canvas-${index}`) as HTMLCanvasElement | null;
       if (canvasElement) {
         destroyChart(canvasElement);
@@ -163,58 +169,7 @@
     }
   }
 
-  function destroyChart(canvas: HTMLCanvasElement | null) {
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        const chartInstance = Chart.getChart(ctx);
-        if (chartInstance) {
-          chartInstance.destroy();
-        }
-      }
-    }
-  }
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false },
-    },
-    scales: {
-      x: { display: false, title: { display: false, text: "Days" } },
-      y: { display: false, title: { display: false, text: "Price" } },
-    },
-  };
-
-  function createLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
-    const ctx = canvas?.getContext("2d");
-    if (ctx) {
-      new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
-          datasets: [
-            {
-              label: "",
-              fill: true,
-              data: prices,
-              borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
-              backgroundColor: document.body.classList.contains("dark")
-                ? "rgba(143, 77, 151, 0.7)"
-                : "rgba(143, 77, 151, 0.4)",
-              borderWidth: 1,
-              pointRadius: 0, // Hide points
-            },
-          ],
-        },
-        options: chartOptions,
-      });
-    }
-  }
-
   onMount(async () => {
-    await updateCharts();
     await updateData();
     trackCryptoChanges();
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -224,7 +179,7 @@
 
 {#each tableData as crypto, index}
   <tr
-    on:click={() => handleDetailOpen(crypto.rank, crypto.name)}
+    on:click={() => handleDetailOpen(crypto.rank, crypto.code)}
     role="button"
     class="even:bg-bg odd:bg-secondary max-h-[88px] dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
   >
@@ -236,21 +191,20 @@
       {@html displayCurrencyName(crypto).outerHTML}
     </td>
     <td class="hidden py-2 sm:px-2 2xl:px-2 text-text dark:text-dark-text sm:table-cell 2xl:table-cell">
-      <canvas id={`canvas-${index}`} width="100" height="0" class="py-2"></canvas>
+      <canvas id={`canvas-${index}`} width="100" height="0" class="py-2 min-h-[48px]"></canvas>
     </td>
     <td class="py-2 sm:px-4 2xl:px-4">
       <!-- On smaller screens (xs) -->
       <div class="xs:flex xs:flex-col xs:items-center sm:hidden 2xl:hidden">
-        <span class="xs:text-xs text-text/30 dark:text-dark-text/30">
+        <span class="mr-1 xs:text-xs text-text/30 dark:text-dark-text/30">
           {shortenedCurrency}
-        </span>
-        <span class="xs:text-xs sm:text-base 2xl:text-base">
+        </span><span class="xs:text-xs sm:text-base 2xl:text-base">
           {@html formatNumberToHTML(crypto.rate).outerHTML}
         </span>
       </div>
 
       <!-- On larger screens (sm and above) -->
-      <div class="hidden sm:flex sm:justify-between sm:items-center 2xl:justify-start 2xl:items-center">
+      <div class="hidden sm:flex sm:items-center 2xl:justify-start 2xl:items-center">
         <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
           {shortenedCurrency}
         </span>
@@ -294,11 +248,11 @@
       </span>
     </td>
     <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
-      <span class="text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
+      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
       {@html formatNumberToHTML(crypto.cap).outerHTML}
     </td>
     <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
-      <span class="text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
+      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
       {@html formatNumberToHTML(crypto.volume).outerHTML}
     </td>
     <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">

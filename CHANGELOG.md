@@ -1,5 +1,24 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.14 Beta
+
+### New features
+
+- Added detail page, still work in progress, but it's currently usable, expect more info later, it's responsive
+
+### Changes
+
+- Removed turning light/dark mode with burger menu icon, on phones, separate menu will be added
+- Added detail page image to README
+
+### Fixes
+
+- Changed API key, so now the app will work
+
+### Technical
+
+- ATH (alltimehigh) in detail page will always be in USD, because API for some reason doesn't support different currencies (maybe possible with custom converting, not sure rn)
+
 ## Version 0.13.6 Beta
 
 ### New features

@@ -9,10 +9,13 @@ export interface CryptoData {
   volume: number;
   circulatingSupply: number;
   totalSupply: number;
+  maxSupply: number;
   png64: string;
   change1h: number;
   change24h: number;
   changeStatus: string;
+  age: number;
+  allTimeHighUSD: number;
 }
 
 export interface HistoricalCryptoData {

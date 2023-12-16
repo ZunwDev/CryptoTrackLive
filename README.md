@@ -21,8 +21,14 @@ Try it yourself: https://cryptotrack-live.vercel.app
 
 [MIT](https://github.com/ZunwDev/CryptoTrack/blob/main/LICENSE)
 
-### How it looks:
+## How it looks:
+
+### Home Page
 
 ![sneakpeek-image](src/lib/images/Screenshot_3.png)
+
+### Detail Page (WIP):
+
+![sneakpeek-image2](src/lib/images/Screenshot_4.png)
 
 #### Check CHANGELOG.md for updates & changes

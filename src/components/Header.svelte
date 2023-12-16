@@ -6,7 +6,7 @@
   import { writable } from "svelte/store";
   import { handleClickOutside, toggleMenu } from "../util/utils";
   import type { CryptoData } from "../types/Data";
-  import { CURRENCIES, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "../util/constants";
+  import { CURRENCIES, MAIN_PAGE_URL, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "../util/constants";
   import { getData } from "../util/api";
 
   let currentCurrency: string = $currencyStore;
@@ -128,8 +128,6 @@
     store.set(newData);
   }
 
-  let mainPageUrl: string | null;
-
   onMount(() => {
     const storedMode = localStorage.getItem("color-theme");
     if (storedMode === "dark" || (!storedMode && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -152,9 +150,6 @@
         handleClickOutside(event, searchMenu, searchBarPC);
       }
     });
-
-    const isLocalhost = window.location.hostname === "localhost";
-    mainPageUrl = isLocalhost ? "http://localhost:5173" : "https://cryptotrack-live.vercel.app";
 
     window.addEventListener("keyup", (event) => {
       if (event.key === "/") {
@@ -193,7 +188,7 @@
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
   <nav class="flex px-4 py-3 my-auto mx-auto transition-all justify-between items-center w-full min-w-[320px]">
-    <a href={mainPageUrl} class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
+    <a href={MAIN_PAGE_URL} class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
       <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
       <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
       <span
@@ -242,7 +237,7 @@
                 <a
                   role="button"
                   on:click={() => searchMenu?.classList.toggle("hidden")}
-                  href={`/detail/${result.rank}/${result.name}`}
+                  href={`/detail/${result.rank}/${result.code}`}
                   class="flex items-center w-full h-12 px-4 text-left hover:bg-accent/30 dark:hover:bg-dark-accent/30"
                 >
                   <div class="flex flex-row items-center gap-2">

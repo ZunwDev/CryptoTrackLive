@@ -1,3 +1,6 @@
+import Chart from "chart.js/auto";
+import { onMount } from "svelte";
+
 export function formatNumberToHTML(number: number) {
   const suffixes = ["", "K", "M", "B", "T", "QD", "QN", "SX"];
   const numAbs = Math.abs(number);
@@ -71,18 +74,23 @@ export function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, 
   }
 }
 
-export function getUnixTimeFor7DaysAgo() {
+export function getUnixTimeXDaysAgo(days: number) {
   const today = new Date();
-  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-  sevenDaysAgo.setUTCHours(0, 0, 0, 0);
-  return sevenDaysAgo.getTime();
+  const daysAgo = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+  daysAgo.setUTCHours(0, 0, 0, 0);
+  return daysAgo.getTime();
 }
 
-export function getCurrentUnixTime() {
+export function getCurrentUnixTime(startOfDay?: boolean) {
   const currentDate = new Date();
   const currentHour = currentDate.getHours();
-  const firstNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(0, 1)) : currentHour;
-  const secondNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(1, 2)) : null;
+  let firstNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(0, 1)) : currentHour;
+  let secondNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(1, 2)) : null;
+
+  if (startOfDay) {
+    firstNumber = 0;
+    secondNumber = 0;
+  }
 
   if (secondNumber !== null) {
     currentDate.setUTCHours(firstNumber, secondNumber, 0, 0);
@@ -93,6 +101,86 @@ export function getCurrentUnixTime() {
   return currentDate.getTime();
 }
 
-export function handleDetailOpen(rank: number, name: string) {
-  window.location.href = `/detail/${rank}/${name}`;
+export function handleDetailOpen(rank: number, code: string) {
+  window.location.href = `/detail/${rank}/${code}`;
+}
+
+export function convertDaysToDate(days: number) {
+  const millisecondsInADay = 24 * 60 * 60 * 1000;
+  const currentDate = new Date();
+  const releaseTimestamp = currentDate.getTime() - days * millisecondsInADay;
+  const releaseDate = new Date(releaseTimestamp);
+  const formattedDate = `${releaseDate.getDate()}/${releaseDate.getMonth() + 1}/${releaseDate.getFullYear()}`;
+
+  return formattedDate;
+}
+
+export function destroyChart(canvas: HTMLCanvasElement | null) {
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      const chartInstance = Chart.getChart(ctx);
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+    }
+  }
+}
+
+function chartOptions(isDetail: boolean = false, currency?: string) {
+  return {
+    responsive: true,
+    plugins: {
+      legend: { display: isDetail },
+      tooltip: {
+        enabled: isDetail,
+        callbacks: {
+          title: function (tooltipItems: any) {
+            return tooltipItems && tooltipItems.length > 0 ? "" : ``;
+          },
+          label: function (tooltipItem: any) {
+            const value = tooltipItem.formattedValue;
+            return `${value}`;
+          },
+        },
+      },
+      title: { display: isDetail, text: `Price Chart (${currency})` },
+    },
+    scales: {
+      x: { display: false, title: { display: false, text: "Days" } },
+      y: { display: isDetail, title: { display: isDetail, text: "Price" } },
+    },
+  };
+}
+
+export function createLineChart(
+  canvas: HTMLCanvasElement | null,
+  prices: any[],
+  isDetail?: boolean,
+  currency?: string
+) {
+  const ctx = canvas?.getContext("2d");
+  if (ctx) {
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
+        datasets: [
+          {
+            label: "",
+            fill: true,
+            data: prices,
+            borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
+            backgroundColor: document.body.classList.contains("dark")
+              ? "rgba(143, 77, 151, 0.7)"
+              : "rgba(143, 77, 151, 0.4)",
+            borderWidth: 1,
+            pointRadius: isDetail && isDetail ? 3 : 0, // Hide points
+          },
+        ],
+      },
+      //@ts-ignore
+      options: chartOptions(isDetail, currency),
+    });
+  }
 }

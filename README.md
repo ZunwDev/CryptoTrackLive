@@ -29,6 +29,6 @@ Try it yourself: https://cryptotrack-live.vercel.app
 
 ### Detail Page (WIP):
 
-![sneakpeek-image2](src/lib/images/Screenshot_4.png)
+![sneakpeek-image2](src/lib/images/Screenshot_6.png)
 
 #### Check CHANGELOG.md for updates & changes

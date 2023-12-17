@@ -248,12 +248,14 @@
       </span>
     </td>
     <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
-      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
-      {@html formatNumberToHTML(crypto.cap).outerHTML}
+      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
+        {shortenedCurrency}</span
+      >{@html formatNumberToHTML(crypto.cap).outerHTML}
     </td>
     <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
-      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30"> {shortenedCurrency}</span>
-      {@html formatNumberToHTML(crypto.volume).outerHTML}
+      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
+        {shortenedCurrency}</span
+      >{@html formatNumberToHTML(crypto.volume).outerHTML}
     </td>
     <td class="hidden py-2 sm:px-4 2xl:px-4 sm:table-cell 2xl:table-cell">
       {@html formatNumberToHTML(crypto.circulatingSupply).outerHTML}

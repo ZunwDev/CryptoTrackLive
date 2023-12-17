@@ -1,5 +1,22 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.14.1 Beta
+
+### New features
+
+- Added coin's media into detail page
+
+### Fixes
+
+- Fixed detail page responsive on phones (some weird cropping of content, etc.)
+- Fixed overview in detail page, the rank indicator not having cornered corner (phone only)
+- Fixed detail not updating, when user searched another coin and wanted to see it (had to refresh the page)
+
+### Known issues
+
+- Some icons don't exist or are outdated in current set of icons, probably gonna use different icon library (this is only for media in detail page)
+- Chart isn't resizing automatically when user changes dimensions (not sure if fixable - current solution that works is to refresh a page)
+
 ## Version 0.14 Beta
 
 ### New features

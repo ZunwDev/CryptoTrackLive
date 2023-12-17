@@ -1,3 +1,4 @@
+import { goto } from "$app/navigation";
 import Chart from "chart.js/auto";
 import { onMount } from "svelte";
 
@@ -102,7 +103,7 @@ export function getCurrentUnixTime(startOfDay?: boolean) {
 }
 
 export function handleDetailOpen(rank: number, code: string) {
-  window.location.href = `/detail/${rank}/${code}`;
+  goto(`/detail/${rank}/${code}`);
 }
 
 export function convertDaysToDate(days: number) {
@@ -139,16 +140,21 @@ function chartOptions(isDetail: boolean = false, currency?: string) {
             return tooltipItems && tooltipItems.length > 0 ? "" : ``;
           },
           label: function (tooltipItem: any) {
-            const value = tooltipItem.formattedValue;
-            return `${value}`;
+            return `${currency}: ${tooltipItem.formattedValue}`;
           },
         },
       },
       title: { display: isDetail, text: `Price Chart (${currency})` },
     },
     scales: {
-      x: { display: false, title: { display: false, text: "Days" } },
-      y: { display: isDetail, title: { display: isDetail, text: "Price" } },
+      x: {
+        display: false,
+        title: { display: false, text: "Days" },
+      },
+      y: {
+        display: isDetail,
+        title: { display: isDetail, text: "Price" },
+      },
     },
   };
 }
@@ -161,7 +167,7 @@ export function createLineChart(
 ) {
   const ctx = canvas?.getContext("2d");
   if (ctx) {
-    new Chart(ctx, {
+    const chart = new Chart(ctx, {
       type: "line",
       data: {
         labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
@@ -182,5 +188,6 @@ export function createLineChart(
       //@ts-ignore
       options: chartOptions(isDetail, currency),
     });
+    chart.resize();
   }
 }

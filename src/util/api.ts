@@ -1,8 +1,6 @@
 import { dataLoading, detailLoading, secondaryDetailLoading } from "../store/store";
 import { API_KEY, SORT_DIRECTION_ASCENDING } from "./constants";
 
-console.log(API_KEY);
-
 async function fetchData(apiEndpoint: string, requestBody: object) {
   try {
     const response = await fetch(apiEndpoint, {

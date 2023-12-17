@@ -16,6 +16,7 @@ export interface CryptoData {
   changeStatus: string;
   age: number;
   allTimeHighUSD: number;
+  links: object;
 }
 
 export interface HistoricalCryptoData {

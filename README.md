@@ -25,7 +25,7 @@ If you really want to contribute, I'm open for any contributions that are meanin
 
 1. Create a fork of this app
 2. Import it to your code editor
-3. When you are in the CryptoTrack folder, do ```npm run dev```
+3. When you are in the CryptoTrack folder, do ```npm install``` and then ```npm run dev```
 
 ### To contribute do
 1. Before contributing run ```npm run build``` to check if everything is fine

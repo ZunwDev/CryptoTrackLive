@@ -15,6 +15,7 @@ import {
 } from "svelte-awesome/icons";
 
 export const API_KEY = import.meta.env.VITE_API_KEY;
+export const CS_API_KEY = import.meta.env.VITE_CS_API_KEY;
 export const SORT_DIRECTION_ASCENDING = "ascending";
 export const SORT_DIRECTION_DESCENDING = "descending";
 export const ENTRY_AMOUNT: number[] = [10, 25, 50, 100];

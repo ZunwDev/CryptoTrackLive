@@ -1,32 +1,80 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { CryptoData, HistoricalCryptoData } from "../../../../types/Data";
+  import type { CryptoData, ExchangeData, FiatData, HistoricalCryptoData, MarketData } from "../../../../types/Data";
   import Icon from "svelte-awesome";
-  import { getDataSingle, getHistoricalData } from "../../../../util/api";
-  import { currencyStore, detailLoading, secondaryDetailLoading } from "../../../../store/store";
-  import { LINK_ICONS, MAIN_PAGE_URL } from "../../../../util/constants";
   import {
+    getDataSingle,
+    getExchangeTickerData,
+    getFiatData,
+    getHistoricalData,
+    getMarketTickerData,
+  } from "../../../../util/api";
+  import {
+    currencyStore,
+    detailLoading,
+    entryStore,
+    exchangeLoading,
+    fiatsLoading,
+    marketLoading,
+    pageStore,
+    secondaryDetailLoading,
+  } from "../../../../store/store";
+  import { ENTRY_AMOUNT, LINK_ICONS, MAIN_PAGE_URL } from "../../../../util/constants";
+  import {
+    convertCurrency,
     convertDaysToDate,
     createLineChart,
     destroyChart,
     formatNumberToHTML,
+    generatePaginationLinks,
     getCurrentUnixTime,
     getUnixTimeXDaysAgo,
+    handleClickOutside,
+    toggleMenu,
   } from "../../../../util/utils";
   import { page } from "$app/stores";
+  import { angleDoubleLeft, angleDoubleRight, chevronDown, folderOpenO } from "svelte-awesome/icons";
 
   export let data: any;
 
   let currentLoadingState: boolean = $detailLoading;
   let currentSecondaryLoadingState: boolean = $secondaryDetailLoading;
+
+  let currentMarketLoadingState: boolean = $marketLoading;
+  let currentExchangeLoadingState: boolean = $exchangeLoading;
+  let currentFiatLoadingState: boolean = $fiatsLoading;
+
+  let entryButton: HTMLElement | null;
+  let entryMenu: HTMLElement | null;
+
   let shortenedCurrency: string | undefined;
+  let usdToTargetCurrencyRate: number | undefined;
+  let entryCount: number | undefined;
+
+  //Data
   let tableData: CryptoData[] = [];
+  let marketData: MarketData[] = [];
+  let fiatData: FiatData[] = [];
+  let exchangeData: ExchangeData[] = [];
+  let historicalTableData: HistoricalCryptoData[] = [];
+
   let filteredLinks: [string, any][];
   let linksWithIcons: any = [];
-  let historicalTableData: HistoricalCryptoData[] = [];
   let dataObj = data.data[0];
 
+  let currentPage: number = $pageStore;
+  let pageCount: number = 100 / $entryStore;
+
+  let exchangeDataLoaded: boolean = false;
   let isDomReady: boolean = false;
+
+  let names: { name: string; hiddenOnSmall?: boolean }[] = [
+    { name: "Exchange" },
+    { name: "Market" },
+    { name: "Price" },
+    { name: "Volume", hiddenOnSmall: true },
+    { name: "Actions" },
+  ];
 
   async function updateAllData() {
     if (isDomReady) {
@@ -38,9 +86,39 @@
     } else return;
   }
 
+  async function updateExchangeData() {
+    exchangeDataLoaded = false;
+    if (isDomReady) {
+      dataObj = data.data[0];
+      await fetchMarketData(dataObj.code);
+      await fetchExchangeData();
+      await fetchFiatData();
+      await checkExchangeDataReadiness();
+      marketData.forEach((market) => {
+        const exchange = exchangeData.find(
+          (ex) => ex.name === (market.exchange === "BinanceFutures" ? "Binance Futures" : market.exchange)
+        );
+
+        if (exchange) {
+          market.url = exchange.url || "-";
+          market.icon = exchange.icon || "-";
+        }
+      });
+      exchangeDataLoaded = true;
+    } else return;
+  }
+
   $: {
     shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
     updateAllData();
+  }
+
+  $: {
+    shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
+    entryCount = $entryStore;
+    currentPage = $pageStore;
+    pageCount = 100 / $entryStore;
+    updateExchangeData();
   }
 
   async function updateChart() {
@@ -62,7 +140,11 @@
   page.subscribe(async (value) => {
     currentLoadingState = true;
     currentSecondaryLoadingState = true;
-    updateAllData();
+    currentExchangeLoadingState = true;
+    currentFiatLoadingState = true;
+    currentMarketLoadingState = true;
+    await updateAllData();
+    await updateExchangeData();
   });
 
   async function fetchData() {
@@ -107,6 +189,60 @@
     }
   }
 
+  async function fetchMarketData(coin: string) {
+    try {
+      const response = (await getMarketTickerData(coin, entryCount, currentPage)) as MarketData[];
+      if (response) {
+        //@ts-ignore
+        marketData = response.result.map((item: MarketData) => ({
+          exchange: item.exchange || "-",
+          from: item.from || "-",
+          pair: item.pair || "-",
+          price: item.price || 0,
+          volume: item.volume || 0,
+        }));
+      } else {
+        marketData = [];
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
+  async function fetchFiatData() {
+    try {
+      const response = (await getFiatData()) as FiatData[];
+      if (response) {
+        fiatData = response.map((item: FiatData) => ({
+          name: item.name,
+          rate: item.rate,
+        }));
+        usdToTargetCurrencyRate = fiatData.find((currency) => currency.name === shortenedCurrency)?.rate || 0;
+      } else {
+        fiatData = [];
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
+  async function fetchExchangeData() {
+    try {
+      const response = (await getExchangeTickerData()) as ExchangeData[];
+      if (response) {
+        exchangeData = response.map((item: ExchangeData) => ({
+          name: item.name || "-",
+          url: item.url || "-",
+          icon: item.icon || "-",
+        }));
+      } else {
+        exchangeData = [];
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
   async function fetchHistoricalData(code: string, startTS: number, endTS: number) {
     // TS = timestamp
     try {
@@ -124,6 +260,17 @@
     }
   }
 
+  function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
+    pageStore.set(1);
+    currentExchangeLoadingState = true;
+    currentFiatLoadingState = true;
+    currentMarketLoadingState = true;
+    element1?.setAttribute("aria-hidden", "true");
+    element2?.setAttribute("aria-expanded", "false");
+    element1?.classList.toggle("hidden");
+    store.set(newData);
+  }
+
   async function checkDataReadiness(): Promise<void> {
     return new Promise((resolve) => {
       const int = setInterval(() => {
@@ -136,11 +283,43 @@
       }, 0);
     });
   }
+  async function checkExchangeDataReadiness(): Promise<void> {
+    return new Promise((resolve) => {
+      const int = setInterval(() => {
+        if (marketData.length > 0 && fiatData.length > 0 && exchangeData.length > 0) {
+          currentExchangeLoadingState = false;
+          currentFiatLoadingState = false;
+          currentMarketLoadingState = false;
+          clearInterval(int);
+          resolve();
+        }
+      }, 0);
+    });
+  }
+
+  function handleWindowClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target === entryButton || (entryButton && entryButton.contains(target))) {
+      event.stopPropagation();
+      toggleMenu(entryMenu, entryButton, entryMenu);
+    } else {
+      handleClickOutside(event, entryMenu, entryButton);
+    }
+  }
+
+  function updatePage(page: number) {
+    pageStore.set(page);
+    currentExchangeLoadingState = true;
+    currentFiatLoadingState = true;
+    currentMarketLoadingState = true;
+  }
 
   onMount(async () => {
+    window.addEventListener("click", handleWindowClick);
     isDomReady = true;
     if (isDomReady) {
       await updateAllData();
+      await updateExchangeData();
     } else return;
   });
 </script>
@@ -157,7 +336,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 </svelte:head>
 
-<section class="max-w-[1200px] min-w-[320px] flex py-8 text-text dark:text-dark-text mx-auto flex-col px-4">
+<section class="max-w-[1200px] min-w-[320px] flex py-8 text-text dark:text-dark-text mx-auto flex-col px-4 pb-32">
   <span class="text-text/50 dark:text-dark-text/50"
     ><a href={MAIN_PAGE_URL} class="text-left underline text-accent dark:text-dark-accent">Home</a> > {dataObj.code}</span
   >
@@ -270,8 +449,10 @@
             </div>
           {/if}
         </div>
-        <div class="h-fit rounded-lg bg-secondary dark:bg-dark-secondary min-w-[320px]">
-          <div class="flex flex-wrap items-center justify-start gap-1 px-4 py-2">
+        <div
+          class="h-12 w-full md:w-[320px] overflow-x-auto rounded-lg bg-secondary dark:bg-dark-secondary min-w-[320px]"
+        >
+          <div class="flex flex-wrap items-center justify-start gap-2 px-4 py-2">
             {#each linksWithIcons as link}
               <a
                 href={link.url}
@@ -286,7 +467,7 @@
           </div>
         </div>
       </div>
-      <div class="flex w-full rounded-lg h-96 bg-secondary dark:bg-dark-secondary min-w-[320px] relative">
+      <div class="flex w-full rounded-lg h-[448px] bg-secondary dark:bg-dark-secondary min-w-[320px] relative">
         <div
           class="absolute top-0 left-0 flex items-center justify-center w-full h-full"
           style="display: {currentSecondaryLoadingState ? 'flex' : 'none'}"
@@ -305,4 +486,145 @@
     </div>
     <div class="flex sm:flex-row flex-col gap-4 mt-2 relative overflow-hidden min-w-[320px]"></div>
   </div>
+  <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} Exchanges</h1>
+  <div class="w-full pb-4 mt-1">
+    {#if currentMarketLoadingState && currentExchangeLoadingState && currentFiatLoadingState}
+      <div class="flex items-center justify-center h-full mt-32">
+        <div class="absolute">
+          <div class="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+    {:else}
+      <table class="border w-full table-auto border-secondary dark:border-dark-secondary min-w-[320px]">
+        <thead
+          ><tr class="even:bg-secondary odd:bg-bg dark:even:bg-dark-secondary dark:odd:bg-dark-bg">
+            {#each names as name, index}
+              <!-- Table header columns -->
+              <th class="py-2 text-xs sm:px-4 sm:text-base {name.hiddenOnSmall && 'hidden sm:table-cell'}">
+                {name.name}
+              </th>
+            {/each}
+          </tr>
+        </thead>
+
+        <tbody>
+          {#each marketData as data, index}
+            <tr
+              class="even:bg-bg odd:bg-secondary max-h-[88px] dark:even:bg-dark-bg dark:odd:bg-dark-secondary hover:bg-secondary/50 dark:hover:bg-dark-secondary/20"
+            >
+              <td class="py-2 mr-1 text-xs text-center sm:text-base">{data.exchange}</td>
+              <td class="py-2 mr-1 text-xs text-center sm:text-base">{data.pair}</td>
+              <td class="py-2 mr-1 text-xs text-center sm:text-base">
+                <div class="flex flex-col items-center justify-center md:flex-row">
+                  <!-- Updated class -->
+                  <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
+                    {shortenedCurrency}
+                  </span>
+                  <span class="text-xs sm:text-base">
+                    {@html formatNumberToHTML(Number(convertCurrency(data.price, usdToTargetCurrencyRate))).outerHTML}
+                  </span>
+                </div>
+              </td>
+              <td class="hidden py-2 mr-1 text-xs text-center sm:text-base md:table-cell">
+                <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
+                  {shortenedCurrency}
+                </span><span class="text-xs sm:text-base">
+                  {@html formatNumberToHTML(Number(convertCurrency(data.volume, usdToTargetCurrencyRate))).outerHTML}
+                </span></td
+              >
+              <td class="py-2 mr-1 text-xs text-center sm:text-base">
+                {#if exchangeDataLoaded && data.url && data.url !== "-"}
+                  <a
+                    href={data.url}
+                    target="_blank"
+                    class="font-semibold underline uppercase text-accent dark:text-dark-accent hover:text-accent/50 dark:hover:text-dark-accent/50"
+                  >
+                    Trade now
+                  </a>
+                {:else}
+                  <span class="text-text/30 dark:text-dark-text/30">-</span>
+                {/if}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
+  </div>
+  {#if !currentMarketLoadingState && !currentExchangeLoadingState && !currentFiatLoadingState}
+    <div class="flex items-center justify-center mx-auto">
+      <a
+        role="button"
+        on:click={() => (currentPage !== 1 ? updatePage(1) : undefined)}
+        href={currentPage !== 1 ? "?page=1" : undefined}
+        class="px-3 py-2 rounded-tl-lg rounded-bl-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
+        1
+          ? 'opacity-70 cursor-not-allowed'
+          : 'hover:brightness-150 dark:hover:brigtness-200'}"
+        ><Icon data={angleDoubleLeft} class="scale-100 opacity-50 text-text dark:text-dark-text"></Icon></a
+      >
+      {#if pageCount > 1}
+        {#each generatePaginationLinks(currentPage, pageCount) as page}
+          <a
+            role="button"
+            href="?page={page}"
+            on:click={() => (currentPage !== page ? updatePage(page) : undefined)}
+            class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {currentPage ===
+            page
+              ? 'bg-accent dark:bg-dark-accent hover:brightness-150 dark:hover:brigtness-200'
+              : 'hover:brightness-150 dark:hover:brigtness-200 bg-secondary dark:bg-dark-secondary'}">{page}</a
+          >
+        {/each}
+      {/if}
+      <a
+        role="button"
+        on:click={() => (currentPage !== pageCount ? updatePage(pageCount) : undefined)}
+        href={currentPage !== pageCount ? `?page=${pageCount}` : undefined}
+        class="px-3 py-2 rounded-tr-lg rounded-br-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
+        pageCount
+          ? 'opacity-70 cursor-not-allowed'
+          : 'hover:brightness-150 dark:hover:brigtness-200'}"
+        ><Icon data={angleDoubleRight} class="scale-100 opacity-50 text-text dark:text-dark-text"></Icon></a
+      >
+    </div>
+    <div class="relative">
+      <button
+        bind:this={entryButton}
+        id="entries-button"
+        aria-expanded="false"
+        class="absolute bottom-0 right-0 items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:inline-flex"
+      >
+        <Icon data={folderOpenO} class="mr-1 opacity-50" />
+        {entryCount} Coins
+        <Icon data={chevronDown} class="ml-1 scale-75 opacity-50" />
+      </button>
+
+      <!-- Dropdown menu for entries -->
+      <div
+        bind:this={entryMenu}
+        id="entries-menu"
+        tabindex="-1"
+        aria-hidden="true"
+        class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-1 bg-secondary dark:bg-dark-secondary"
+      >
+        <!-- Entry selection buttons -->
+        {#each ENTRY_AMOUNT as entryItem}
+          <button
+            on:click={() => updateData(entryItem, entryMenu, entryButton, entryStore)}
+            class="inline-flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {entryItem ===
+            entryCount
+              ? '!bg-accent !dark:bg-dark-accent'
+              : ''}"
+          >
+            {entryItem} Coins
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
 </section>

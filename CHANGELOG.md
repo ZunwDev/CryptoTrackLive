@@ -1,5 +1,22 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.14.3 Beta
+
+### New features
+
+- Added exchanges into detail page (next update will bring latest news for the selected coin)
+  - **one downbad for this system is, sometimes may CORS issue show up => user needs to refresh the page** (this may be fixed in further updates)
+  - this contains already pagination and possibility to how much entries user can see
+  - already is responsive on smaller screens
+  - shows only verified exchanges/markets
+  - when clicking on "TRADE NOW" it will open new tab
+
+### Changes
+
+- PC - Changed the chart container to be as same height as the overview + media
+- Made media container strict height, it's no more fit, it will overflow now
+- Added resources into README.md
+
 ## Version 0.14.2 Beta
 
 ### Changes

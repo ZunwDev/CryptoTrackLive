@@ -13,7 +13,7 @@
   } from "svelte-awesome/icons";
   import Data from "../components/Data.svelte";
   import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "../store/store";
-  import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
+  import { generatePaginationLinks, handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
   import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "../util/constants";
   import Overview from "../components/Overview.svelte";
 
@@ -50,6 +50,7 @@
 
   function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
     pageStore.set(1);
+    dataLoading.set(true);
     element1?.setAttribute("aria-hidden", "true");
     element2?.setAttribute("aria-expanded", "false");
     element1?.classList.toggle("hidden");
@@ -63,22 +64,6 @@
         scrollToTop();
       }, 1000);
     }
-  }
-
-  function generatePaginationLinks(currentPage: number, pageCount: number) {
-    const linksToShow = 5;
-    let startPage;
-    if (currentPage > linksToShow - 1) {
-      startPage = currentPage - linksToShow + 1;
-    } else {
-      startPage = 1;
-    }
-    const endPage = Math.min(startPage + linksToShow - 1, pageCount);
-    const links = [];
-    for (let i = startPage; i <= endPage; i++) {
-      links.push(i);
-    }
-    return links;
   }
 
   function sortCoins(sortBy?: string) {

@@ -17,3 +17,6 @@ export const pageCountStore = writable(entryStore);
 export const dataLoading = writable(true);
 export const detailLoading = writable(true);
 export const secondaryDetailLoading = writable(true);
+export const exchangeLoading = writable(true);
+export const marketLoading = writable(true);
+export const fiatsLoading = writable(true);

@@ -39,3 +39,25 @@ export interface NoCoinsFound {
   png64: string;
   rank: number | null;
 }
+
+export interface MarketData {
+  icon: string;
+  url: string;
+  result?: any;
+  exchange: string;
+  from: string;
+  pair: string;
+  price: number;
+  volume: number;
+}
+
+export interface FiatData {
+  name: string;
+  rate: number;
+}
+
+export interface ExchangeData {
+  name: string;
+  url: string;
+  icon: string;
+}

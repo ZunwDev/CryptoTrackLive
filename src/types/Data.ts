@@ -32,3 +32,10 @@ export interface OverviewData {
   btcDominance?: number;
   [key: string]: number | undefined | "N/A";
 }
+
+export interface NoCoinsFound {
+  name: string;
+  code: string;
+  png64: string;
+  rank: number | null;
+}

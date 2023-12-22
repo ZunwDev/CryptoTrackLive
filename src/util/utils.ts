@@ -1,6 +1,5 @@
 import { goto } from "$app/navigation";
 import Chart from "chart.js/auto";
-import { onMount } from "svelte";
 
 export function formatNumberToHTML(number: number) {
   const suffixes = ["", "K", "M", "B", "T", "QD", "QN", "SX"];

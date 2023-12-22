@@ -166,10 +166,10 @@
             {#each names as name, index}
               <!-- Table header columns -->
               <th
-                class="sm:px-4 2xl:px-4 py-2 xs:text-xs
+                class="sm:px-4 py-2 xs:text-xs
                      {index === 0 ? 'px-2' : index < 2 ? 'xs:px-0.5' : index >= 4 ? 'px-2' : 'xs:px-8'} 
-                     sm:text-base 2xl:text-base text-text dark:text-dark-text
-                     {name.hiddenOnSmall ? 'hidden sm:table-cell 2xl:table-cell' : 'sm:table-cell 2xl:table-cell'} 
+                     sm:text-base text-text dark:text-dark-text
+                     {name.hiddenOnSmall ? 'hidden sm:table-cell' : 'sm:table-cell'} 
                      {name.sortable ? 'cursor-pointer' : ''}"
                 on:click={() => {
                   if (name.sortable) sortCoins(name.sortBy);
@@ -250,11 +250,11 @@
           bind:this={entryButton}
           id="entries-button"
           aria-expanded="false"
-          class="absolute bottom-0.5 right-0 inline-flex px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:hidden sm:hidden md:block 2xl:block"
+          class="absolute bottom-0.5 items-center right-0 px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 hidden md:inline-flex"
         >
-          <Icon data={folderOpenO} class="opacity-50" />
+          <Icon data={folderOpenO} class="mr-1 opacity-50" />
           {currentEntry} Coins
-          <Icon data={chevronDown} class="scale-75 opacity-50" />
+          <Icon data={chevronDown} class="ml-1 scale-75 opacity-50" />
         </button>
 
         <!-- Dropdown menu for entries -->

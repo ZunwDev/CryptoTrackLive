@@ -5,6 +5,12 @@
 Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more.
 Try it yourself: [https://cryptotrack-live.vercel.app](https://crypto-track-zunwdev.vercel.app)
 
+## Important
+
+Data are updated once user changes any of settings, i.e. currency, update rate, it can be live if you uncomment marked parts of code in Data.svelte (expect higher usage of your daily credits on API.)
+
+(If the updating is live and you tab out the page it will stop updating, it will start again if you are on the page)
+
 ## Features
 
 - Responsive design
@@ -25,13 +31,16 @@ If you really want to contribute, I'm open for any contributions that are meanin
 
 1. Create a fork of this app
 2. Import it to your code editor
-3. When you are in the CryptoTrack folder, do ```npm install```
+3. When you are in the CryptoTrack folder, do `npm install`
 4. Go to [LWC](https://www.livecoinwatch.com/tools/api) get your API key
-5. Create an .env file, and insert here ```VITE_API_KEY=your api key```
-6. Run ```npm run dev```
+5. Create an .env file, and insert here `VITE_API_KEY=your api key`
+6. Run `npm run dev`
+
+!Don't put your API key into public!
 
 ### To contribute do
-1. Before contributing run ```npm run build``` to check if everything is fine
+
+1. Before contributing run `npm run build` to check if everything is fine
 2. If the build output has no errors, you are ready to make a pull request
 
 ## License

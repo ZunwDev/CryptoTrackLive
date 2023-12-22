@@ -1,5 +1,16 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.14.2 Beta
+
+### Changes
+
+- Removed all redundant tailwind classes (the one used for responsiveness)
+- Optimized data fetching, added try-catch stuff to avoid later on issues, removed the pointless functions
+- Added currency identication into overview cards
+- Overall code optimalization
+- Commented out all code that is connected to live data updating on home page
+- Sped up search logic, now it gets data only once and searches on them, they change only if user changes currency
+
 ## Version 0.14.1 Beta
 
 ### New features

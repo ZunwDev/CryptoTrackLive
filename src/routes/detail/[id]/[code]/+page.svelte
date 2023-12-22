@@ -1,25 +1,10 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { onMount } from "svelte";
   import type { CryptoData, HistoricalCryptoData } from "../../../../types/Data";
   import Icon from "svelte-awesome";
   import { getDataSingle, getHistoricalData } from "../../../../util/api";
-  import {
-    globe,
-    redditAlien,
-    file,
-    twitter,
-    telegram,
-    medium,
-    instagram,
-    youtubePlay,
-    linkedin,
-    spotify,
-    soundcloud,
-    twitch,
-    wechat,
-  } from "svelte-awesome/icons";
   import { currencyStore, detailLoading, secondaryDetailLoading } from "../../../../store/store";
-  import { MAIN_PAGE_URL } from "../../../../util/constants";
+  import { LINK_ICONS, MAIN_PAGE_URL } from "../../../../util/constants";
   import {
     convertDaysToDate,
     createLineChart,
@@ -30,21 +15,7 @@
   } from "../../../../util/utils";
   import { page } from "$app/stores";
 
-  const linkIcons: { [key: string]: any } = {
-    website: globe,
-    whitepaper: file,
-    reddit: redditAlien,
-    twitter: twitter,
-    telegram: telegram,
-    medium: medium,
-    instagram: instagram,
-    youtube: youtubePlay,
-    linkedIn: linkedin,
-    spotify: spotify,
-    soundcloud: soundcloud,
-    twitch: twitch,
-    wechat: wechat,
-  };
+  export let data: any;
 
   let currentLoadingState: boolean = $detailLoading;
   let currentSecondaryLoadingState: boolean = $secondaryDetailLoading;
@@ -53,7 +24,6 @@
   let filteredLinks: [string, any][];
   let linksWithIcons: any = [];
   let historicalTableData: HistoricalCryptoData[] = [];
-  export let data: any;
   let dataObj = data.data[0];
 
   let isDomReady: boolean = false;
@@ -61,8 +31,8 @@
   async function updateAllData() {
     if (isDomReady) {
       dataObj = data.data[0];
-      await updateData();
-      await updateHistoricalData(dataObj.code, getUnixTimeXDaysAgo(7), getCurrentUnixTime());
+      await fetchData();
+      await fetchHistoricalData(dataObj.code, getUnixTimeXDaysAgo(7), getCurrentUnixTime());
       await updateChart();
       await checkDataReadiness();
     } else return;
@@ -95,64 +65,63 @@
     updateAllData();
   });
 
-  async function loadTableData(): Promise<CryptoData[]> {
-    const response = (await getDataSingle(shortenedCurrency, dataObj.code)) as CryptoData;
-    return [
-      //@ts-ignore
-      {
-        rank: response.rank || 0,
-        name: response.name || "-",
-        rate: response.rate || 0,
-        code: response.code || "",
-        change: response.delta?.hour || 0,
-        cap: response.cap || 0,
-        volume: response.volume || 0,
-        circulatingSupply: response.circulatingSupply || 0,
-        totalSupply: response.totalSupply || 0,
-        maxSupply: response.maxSupply || 0,
-        png64: response.png64 || "-",
-        change1h: response.delta?.hour || 0,
-        change24h: response.delta?.day || 0,
-        age: response.age || 0,
-        allTimeHighUSD: response.allTimeHighUSD || 0,
-        links: response.links,
-      },
-    ];
-  }
-
-  async function loadHistoricalTableData( // TS = timestamp
-    code: string,
-    startTS: number,
-    endTS: number
-  ): Promise<HistoricalCryptoData[]> {
-    const response = await getHistoricalData(code, shortenedCurrency, startTS, endTS);
-
-    if (response && Array.isArray(response.history)) {
-      return response.history.map((item: any) => ({
-        code: response.code || "-",
-        history: item.rate || null,
-      }));
+  async function fetchData() {
+    try {
+      const response = (await getDataSingle(shortenedCurrency, dataObj.code)) as CryptoData;
+      if (response) {
+        tableData = [
+          //@ts-ignore
+          {
+            rank: response.rank || 0,
+            name: response.name || "-",
+            rate: response.rate || 0,
+            code: response.code || "",
+            change: response.delta?.hour || 0,
+            cap: response.cap || 0,
+            volume: response.volume || 0,
+            circulatingSupply: response.circulatingSupply || 0,
+            totalSupply: response.totalSupply || 0,
+            maxSupply: response.maxSupply || 0,
+            png64: response.png64 || "-",
+            change1h: response.delta?.hour || 0,
+            change24h: response.delta?.day || 0,
+            age: response.age || 0,
+            allTimeHighUSD: response.allTimeHighUSD || 0,
+            links: response.links,
+          },
+        ];
+      } else {
+        tableData = [];
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      filteredLinks = Object.entries(tableData[0].links).filter(([key, value]) => value !== null);
+      linksWithIcons = filteredLinks.map(([type, url]) => {
+        return {
+          type,
+          url,
+          icon: LINK_ICONS[type] || "",
+        };
+      });
     }
-
-    return [];
   }
 
-  async function updateData() {
-    const newData = await loadTableData();
-    newData.length > 0 && (tableData = newData);
-    filteredLinks = Object.entries(tableData[0].links).filter(([key, value]) => value !== null);
-    linksWithIcons = filteredLinks.map(([type, url]) => {
-      return {
-        type,
-        url,
-        icon: linkIcons[type] || "",
-      };
-    });
-  }
-
-  async function updateHistoricalData(code: string, startTS: number, endTS: number) {
-    const newData = await loadHistoricalTableData(code, startTS, endTS);
-    newData.length > 0 && (historicalTableData = newData);
+  async function fetchHistoricalData(code: string, startTS: number, endTS: number) {
+    // TS = timestamp
+    try {
+      const response = await getHistoricalData(code, shortenedCurrency, startTS, endTS);
+      if (response) {
+        historicalTableData = response.history.map((item: any) => ({
+          code: response.code || "-",
+          history: item.rate || null,
+        }));
+      } else {
+        historicalTableData = [];
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   }
 
   async function checkDataReadiness(): Promise<void> {
@@ -194,9 +163,7 @@
   >
   <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} Overview</h1>
   <div class="flex flex-col gap-2">
-    <div
-      class="flex md:flex-row 2xl:flex-row xs:flex-col sm:flex-col gap-4 mt-2 relative overflow-hidden min-w-[320px]"
-    >
+    <div class="flex md:flex-row flex-col gap-4 mt-2 relative overflow-hidden min-w-[320px]">
       <div class="flex flex-col gap-4">
         <div
           class="relative flex flex-col overflow-hidden rounded-lg xs:w-full min-w-[320px] h-96 bg-secondary dark:bg-dark-secondary"
@@ -217,7 +184,7 @@
               {#if tableData[0]?.png64}
                 <div class="flex-shrink-0">
                   <img
-                    class="object-cover w-8 h-8 rounded-md sm:w-16 2xl:w16 sm:h-16 2xl:w-16"
+                    class="object-cover w-8 h-8 rounded-md sm:w-16 sm:h-16"
                     src={tableData[0].png64}
                     alt={dataObj.code}
                   />
@@ -336,6 +303,6 @@
         </div>
       </div>
     </div>
-    <div class="flex sm:flex-row 2xl:flex-row xs:flex-col gap-4 mt-2 relative overflow-hidden min-w-[320px]"></div>
+    <div class="flex sm:flex-row flex-col gap-4 mt-2 relative overflow-hidden min-w-[320px]"></div>
   </div>
 </section>

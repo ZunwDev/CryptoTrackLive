@@ -5,7 +5,7 @@
   import { currencyStore, updateRate } from "../store/store";
   import { writable } from "svelte/store";
   import { handleClickOutside, toggleMenu } from "../util/utils";
-  import type { CryptoData } from "../types/Data";
+  import type { CryptoData, NoCoinsFound } from "../types/Data";
   import { CURRENCIES, MAIN_PAGE_URL, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "../util/constants";
   import { getData } from "../util/api";
 
@@ -13,7 +13,7 @@
   let currentRate: number = $updateRate;
 
   async function updateAllData() {
-    await updateTable();
+    await fetchData();
   }
 
   $: {
@@ -44,33 +44,30 @@
     });
   }
 
-  async function loadTableData(): Promise<CryptoData[]> {
-    const response = (await getData("USD", null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
-    if (response.length > 0) {
-      // @ts-ignore
-      return response.map((crypto) => ({
-        rank: crypto.rank || 0,
-        name: crypto.name || "-",
-        code: crypto.code || "-",
-        png64: crypto.png64 || "-",
-      }));
+  async function fetchData() {
+    try {
+      searchLoading = true;
+      const response = (await getData("USD", null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
+      if (response) {
+        // @ts-ignore
+        tableData = response.map((crypto) => ({
+          rank: crypto.rank || 0,
+          name: crypto.name || "-",
+          code: crypto.code || "-",
+          png64: crypto.png64 || "-",
+        }));
+      } else {
+        tableData = [];
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      searchLoading = false;
     }
-    return [];
   }
 
-  async function updateTable() {
-    const newData = await loadTableData();
-    newData.length > 0 && (tableData = newData);
-  }
-  interface NoCoinsFound {
-    name: string;
-    code: string;
-    png64: string;
-    rank: number | null;
-  }
   const searchCryptocurrencies = async (searchTerm: string, limit = 10) => {
     const searchTermLower = searchTerm.toLowerCase();
-    tableData = await loadTableData();
     const matches = tableData.filter(
       (crypto) =>
         crypto.name.toLowerCase().includes(searchTermLower) || crypto.code.toLowerCase().includes(searchTermLower)
@@ -188,7 +185,7 @@
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
   <nav class="flex px-4 py-3 my-auto mx-auto transition-all justify-between items-center w-full min-w-[320px]">
-    <a href={MAIN_PAGE_URL} class="relative flex items-center w-40 mr-auto sm:mr-0 2xl:mr-0">
+    <a href={MAIN_PAGE_URL} class="relative flex items-center w-40 mr-auto sm:mr-0">
       <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
       <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
       <span
@@ -197,12 +194,12 @@
       >
     </a>
 
-    <div class="flex gap-0.5 md:gap-2 2xl:gap-2 ml-auto md:ml-0 2xl:ml-0">
+    <div class="flex gap-0.5 md:gap-2 ml-auto md:ml-0">
       <!-- Search Bar PC -->
       <div
         bind:this={searchBarPC}
         aria-expanded="false"
-        class="relative hidden px-32 py-2 mx-auto transition-all rounded-lg md:block 2xl:block bg-secondary dark:bg-dark-secondary text-text dark:text-dark-text"
+        class="relative hidden px-32 py-2 mx-auto transition-all rounded-lg md:block bg-secondary dark:bg-dark-secondary text-text dark:text-dark-text"
       >
         <Icon data={search} class="absolute inset-0 z-30 scale-125 opacity-50 left-2 top-3"></Icon>
         <input
@@ -258,19 +255,19 @@
       </div>
       <!-- Search Bar Phone -->
       <button
-        class="relative flex items-center justify-center w-10 h-10 overflow-hidden transition rounded-lg 2xl:hidden lg:hidden md:hidden xl:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:block sm:block"
+        class="relative flex items-center justify-center w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
       >
         <span class="flex items-center justify-center transition-all">
           <Icon data={search}></Icon>
         </span>
       </button>
-      <span class="w-0.5 py-4 bg-secondary dark:bg-dark-secondary hidden md:block 2xl:block"></span>
+      <span class="w-0.5 py-4 bg-secondary dark:bg-dark-secondary hidden md:block"></span>
       <div class="relative">
         <!-- Currency Selector -->
         <button
           bind:this={currencyButton}
           aria-expanded="false"
-          class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block 2xl:block"
+          class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
         >
           {currentCurrency}
           <Icon data={chevronDown} class="scale-75 opacity-50" />
@@ -303,7 +300,7 @@
         <!-- Update Button -->
         <button
           bind:this={updateRateButton}
-          class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block 2xl:block"
+          class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
         >
           <Icon data={refresh} class="scale-100 opacity-50" />
           {currentRate / 1000}s
@@ -336,7 +333,7 @@
       <button
         bind:this={darkModeIconElement}
         on:click={toggleDarkMode}
-        class="relative items-center hidden w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block 2xl:block"
+        class="relative items-center hidden w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
       >
         <span class="absolute inset-0 flex items-center justify-center transition-all duration-400">
           {#if $darkMode}
@@ -350,7 +347,7 @@
       <!-- Burger Menu (Mobile) -->
       <button
         id="burger-menu"
-        class="relative items-center w-10 h-10 overflow-hidden transition rounded-lg 2xl:hidden lg:hidden md:hidden xl:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 xs:block sm:block"
+        class="relative items-center block w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
       >
         <span class="inset-0 flex items-center justify-center transition-all">
           <Icon data={bars}></Icon>

@@ -61,7 +61,7 @@ If you really want to contribute, I'm open for any contributions. Just be **awar
 
 ### Resources
 
-[LiveCoinWatchAPI](https://www.livecoinwatch.com/tools/api)
-[CoinStatsAPI](https://openapi.coinstats.app)
-[ChartJS](https://www.chartjs.org)
-[svelte-awesome](https://www.npmjs.com/package/svelte-awesome)
+- [LiveCoinWatchAPI](https://www.livecoinwatch.com/tools/api)
+- [CoinStatsAPI](https://openapi.coinstats.app)
+- [ChartJS](https://www.chartjs.org)
+- [svelte-awesome](https://www.npmjs.com/package/svelte-awesome)

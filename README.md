@@ -25,7 +25,7 @@ Data are updated once user changes any of settings, i.e. currency, update rate, 
 
 ## 🔨 Contributing
 
-If you really want to contribute, I'm open for any contributions that are meaningful. Just be **aware**, the API that I use is really limited, since I can't afford any better like [CoinGecko](https://www.coingecko.com/en/api)
+If you really want to contribute, I'm open for any contributions. Just be **aware**, the API that I use is really limited, since I can't afford any better like [CoinGecko](https://www.coingecko.com/en/api)
 
 ### How to run the application on your local device
 

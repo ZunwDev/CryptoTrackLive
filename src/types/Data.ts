@@ -61,3 +61,13 @@ export interface ExchangeData {
   url: string;
   icon: string;
 }
+
+export interface NewsData {
+  data: any;
+  title: string;
+  description: string;
+  source: string;
+  link: string;
+  createdAt: string;
+  contentHighlights: [];
+}

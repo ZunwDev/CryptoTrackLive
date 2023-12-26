@@ -2,12 +2,14 @@
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
   import { chevronDown, moonO, sunO, refresh, bars, search } from "svelte-awesome/icons";
-  import { currencyStore, updateRate } from "../store/store";
   import { writable } from "svelte/store";
-  import { handleClickOutside, toggleMenu } from "../util/utils";
-  import type { CryptoData, NoCoinsFound } from "../types/Data";
-  import { CURRENCIES, MAIN_PAGE_URL, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "../util/constants";
-  import { getData } from "../util/api";
+  import { currencyStore, updateRate } from "@store/store";
+  import { handleClickOutside, toggleMenu } from "@util/utils";
+  import type { CryptoData, NoCoinsFound } from "../../types/Data";
+  import { getData } from "@util/api/api";
+  import { CURRENCIES, MAIN_PAGE_URL, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "@util/constants";
+  import Loading from "@components/util/Loading.svelte";
+  import { browser } from "$app/environment";
 
   let currentCurrency: string = $currencyStore;
   let currentRate: number = $updateRate;
@@ -47,7 +49,7 @@
   async function fetchData() {
     try {
       searchLoading = true;
-      const response = (await getData("USD", null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
+      const response = (await getData(null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
       if (response) {
         // @ts-ignore
         tableData = response.map((crypto) => ({
@@ -69,8 +71,7 @@
   const searchCryptocurrencies = async (searchTerm: string, limit = 10) => {
     const searchTermLower = searchTerm.toLowerCase();
     const matches = tableData.filter(
-      (crypto) =>
-        crypto.name.toLowerCase().includes(searchTermLower) || crypto.code.toLowerCase().includes(searchTermLower)
+      (crypto) => crypto.name.toLowerCase().includes(searchTermLower) || crypto.code.toLowerCase().includes(searchTermLower)
     );
 
     if (searchTerm === "") {
@@ -113,12 +114,7 @@
     }
   };
 
-  function updateData(
-    newData: string | number,
-    element1: HTMLElement | null,
-    element2: HTMLElement | null,
-    store: any
-  ) {
+  function updateData(newData: string | number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
     element1?.setAttribute("aria-hidden", "true");
     element2?.setAttribute("aria-expanded", "false");
     element1?.classList.toggle("hidden");
@@ -131,33 +127,35 @@
       toggleDarkMode();
     }
 
-    window.addEventListener("click", (event) => {
-      const target = event.target as HTMLElement;
-      if (target === updateRateButton || (updateRateButton && updateRateButton.contains(target))) {
-        event.stopPropagation();
-        toggleMenu(updateRateMenu, updateRateButton, currencyMenu);
-      } else if (target === currencyButton || (currencyButton && currencyButton.contains(target))) {
-        event.stopPropagation();
-        toggleMenu(currencyMenu, currencyButton, updateRateMenu);
-      } else if (target === searchBarPC || (searchBarPC && searchBarPC.contains(target))) {
-        event.stopPropagation();
-      } else {
-        handleClickOutside(event, currencyMenu, currencyButton);
-        handleClickOutside(event, updateRateMenu, updateRateButton);
-        handleClickOutside(event, searchMenu, searchBarPC);
-      }
-    });
+    if (browser) {
+      window.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement;
+        if (target === updateRateButton || (updateRateButton && updateRateButton.contains(target))) {
+          event.stopPropagation();
+          toggleMenu(updateRateMenu, updateRateButton, currencyMenu);
+        } else if (target === currencyButton || (currencyButton && currencyButton.contains(target))) {
+          event.stopPropagation();
+          toggleMenu(currencyMenu, currencyButton, updateRateMenu);
+        } else if (target === searchBarPC || (searchBarPC && searchBarPC.contains(target))) {
+          event.stopPropagation();
+        } else {
+          handleClickOutside(event, currencyMenu, currencyButton);
+          handleClickOutside(event, updateRateMenu, updateRateButton);
+          handleClickOutside(event, searchMenu, searchBarPC);
+        }
+      });
 
-    window.addEventListener("keyup", (event) => {
-      if (event.key === "/") {
-        setTimeout(() => {
-          searchBarPCInput?.focus();
-          searchMenu?.classList.toggle("hidden");
-          searchLoading = true;
-          displaySearchResults(searchBarPCInput?.value);
-        }, 0);
-      }
-    });
+      window.addEventListener("keyup", (event) => {
+        if (event.key === "/") {
+          setTimeout(() => {
+            searchBarPCInput?.focus();
+            searchMenu?.classList.toggle("hidden");
+            searchLoading = true;
+            displaySearchResults(searchBarPCInput?.value);
+          }, 0);
+        }
+      });
+    }
   });
   let timer: number;
   $: {
@@ -188,8 +186,7 @@
     <a href={MAIN_PAGE_URL} class="relative flex items-center w-40 mr-auto sm:mr-0">
       <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
       <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
-      <span
-        class="absolute top-0 right-0 px-1 text-xs rounded-md text-text bg-primary dark:text-dark-text dark:bg-dark-primary"
+      <span class="absolute top-0 right-0 px-1 text-xs rounded-md text-text bg-primary dark:text-dark-text dark:bg-dark-primary"
         >LIVE</span
       >
     </a>
@@ -221,12 +218,7 @@
         >
           {#if searchLoading}
             <div class="flex items-center justify-center w-full h-full">
-              <div class="lds-ring">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-              </div>
+              <Loading />
             </div>
           {:else}
             {#each storedSearchResults as result}
@@ -269,7 +261,7 @@
           aria-expanded="false"
           class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
         >
-          {currentCurrency}
+          {$currencyStore}
           <Icon data={chevronDown} class="scale-75 opacity-50" />
         </button>
         <div
@@ -286,7 +278,7 @@
             <button
               on:click={() => updateData(currencyItem, currencyMenu, currencyButton, currencyStore)}
               class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {currencyItem ==
-              currentCurrency
+              $currencyStore
                 ? '!bg-accent !dark:bg-dark-accent'
                 : ''}"
             >

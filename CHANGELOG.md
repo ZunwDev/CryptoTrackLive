@@ -1,11 +1,39 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.14.4 Beta
+
+### Changes
+
+- Refined chart loading in the detail page for optimized performance.
+- Enhanced chart responsiveness to screen resizing, ensuring a seamless experience across different screen sizes - (it doesn't matter on phones because on phone it's going to load just fine)
+- Conducted extensive code refactoring, resulting in cleaner and more optimized codebase.
+- Implemented improved media handling, clearing old media when users switch coins in the detail page.
+- Streamlined chart loading: now, when a user revisits the detail page, the chart won't be destroyed but will update with smooth animations. This change doesn't apply to the charts on home page, since it wouldn't work
+- Prevented users from backtracking through detail pages, ensuring a direct return to the home page.
+- Enhanced market data loading by selectively updating only the necessary data instead of refreshing everything.
+
+### Fixes
+
+- Rectified data loading issues on the detail page, preventing redundant reloads when switching pages in the markets table.
+- Resolved multiple data loading instances on the detail page, enhancing overall performance by preventing unnecessary data loading.
+
+### Up and coming
+
+- Prepared and structured news data, focusing on English language content, news will be pursuant to what coin is user viewing, i.e. if user is on bitcoin it will show only/mostly news about bitcoin, these go for every coin (not sure if less-known coins will have any news)
+- Prepared store for chart zoom (1d, 3d, 7d etc upto one year)
+
+### Technical
+
+- If you are in detail page, and update the codebase with live deploy/update, the chart doesn't load => refresh fixes it (doesn't affect users)
+- Upon returning to a locally hosted detail page and navigating back (popstate), users are redirected to the deployed app instead of the local host.
+- Added aliases @ for paths instead of ../../.. etc., these go for all main folders (types doesn't work for some reason, any else do)
+
 ## Version 0.14.3 Beta
 
 ### New features
 
-- Added exchanges into detail page (next update will bring latest news for the selected coin)
-  - **one downbad for this system is, sometimes may CORS issue show up => user needs to refresh the page** (this may be fixed in further updates)
+- Added coin market into detail page
+  - **one downbad for this system is, sometimes may CORS issue show up => user needs to refresh the page**
   - this contains already pagination and possibility to how much entries user can see
   - already is responsive on smaller screens
   - shows only verified exchanges/markets

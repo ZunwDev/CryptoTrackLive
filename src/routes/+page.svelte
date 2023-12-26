@@ -11,11 +11,13 @@
     angleDoubleLeft,
     angleDoubleRight,
   } from "svelte-awesome/icons";
-  import Data from "../components/Data.svelte";
-  import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "../store/store";
-  import { generatePaginationLinks, handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "../util/utils";
-  import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "../util/constants";
-  import Overview from "../components/Overview.svelte";
+  import Data from "@components/home/Data.svelte";
+  import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "@store/store";
+  import { generatePaginationLinks, handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "@util/utils";
+  import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "@util/constants";
+  import Overview from "@components/home/Overview.svelte";
+  import Loading from "@components/util/Loading.svelte";
+  import { browser } from "$app/environment";
 
   let currentLoadingState: boolean = $dataLoading;
   let currentEntry: number = $entryStore;
@@ -105,7 +107,9 @@
   }
 
   onMount(() => {
-    window.addEventListener("click", handleWindowClick);
+    if (browser) {
+      //window.addEventListener("click", handleWindowClick);
+    }
   });
 </script>
 
@@ -133,12 +137,7 @@
 <section class="relative flex items-center justify-center w-full">
   {#if currentLoadingState}
     <div class="absolute">
-      <div class="lds-ring">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
+      <Loading />
     </div>
   {/if}
   <div class="flex flex-col pb-48 overflow-auto">

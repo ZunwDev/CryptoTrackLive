@@ -3,25 +3,31 @@
   import { browser } from "$app/environment";
   import Icon from "svelte-awesome";
   import { caretDown, caretUp, minus } from "svelte-awesome/icons";
-  import type { CryptoData, HistoricalCryptoData } from "../types/Data";
+  import type { CryptoData, HistoricalCryptoData } from "../../types/Data";
   import {
-    createLineChart,
+    createLineChartMultiple,
     destroyChart,
+    destroyChartById,
     formatNumberToHTML,
     getCurrentUnixTime,
     getUnixTimeXDaysAgo,
     handleDetailOpen,
-  } from "../util/utils";
-  import { currencyStore, updateRate, entryStore, sortDirStore, sortByStore, pageStore } from "../store/store";
-  import { getData, getHistoricalData } from "../util/api";
+  } from "@util/utils";
+  import { currencyStore, entryStore, sortDirStore, sortByStore, pageStore } from "@store/store";
+  import { fetchHistoricalData } from "@util/api/fetch";
+  import { fetchMultipleCoinData } from "@util/api/fetch/fetchMultipleCoinData";
 
-  let shortenedCurrency: string | undefined;
+  let currency: string | undefined;
   //let updateInterval: number | undefined; //uncomment for live update depending on the update rate time
   let sortDirection: string | undefined;
   let entryCount: number | undefined;
   let sortBy: string | undefined;
   let currentPage: number | undefined;
+  let chartZoom: number | undefined = 7;
 
+  let isDomReady: boolean = false;
+
+  //Data
   let tableData: CryptoData[] = [];
   let historicalTableData: HistoricalCryptoData[] = [];
   let previousChanges: Record<string, number> = {};
@@ -29,25 +35,27 @@
   async function updateCharts() {
     if (typeof document === "undefined") return;
     for (const [index, item] of tableData.entries()) {
-      await fetchHistoricalData(item.code, getUnixTimeXDaysAgo(7), getCurrentUnixTime());
+      historicalTableData = await fetchHistoricalData(item.code, getUnixTimeXDaysAgo(Number(chartZoom)), getCurrentUnixTime());
       const canvasElement = document.getElementById(`canvas-${index}`) as HTMLCanvasElement | null;
       if (canvasElement) {
-        destroyChart(canvasElement);
+        destroyChartById(canvasElement);
         const prices = historicalTableData.map((item) => item.history);
         const filteredArray = prices.filter((_, index) => index % 2 !== 0);
-        createLineChart(canvasElement, filteredArray);
+        createLineChartMultiple(canvasElement, filteredArray);
       } else return;
     }
   }
 
   async function updateAllData() {
-    await fetchData();
-    await updateCharts();
-    await trackCryptoChanges();
+    if (isDomReady) {
+      await fetchMainData();
+      await updateCharts();
+      await trackCryptoChanges();
+    }
   }
 
   $: {
-    shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
+    currency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
     entryCount = $entryStore;
     sortDirection = $sortDirStore;
     sortBy = $sortByStore;
@@ -55,53 +63,22 @@
     updateAllData();
   }
 
-  async function fetchData() {
+  async function fetchMainData() {
     try {
-      const response = (await getData(
-        shortenedCurrency,
-        sortBy,
-        sortDirection,
-        entryCount,
-        currentPage,
-        entryCount
-      )) as CryptoData[];
-      if (response) {
-        //@ts-ignore
-        tableData = response.map((crypto) => ({
-          rank: crypto.rank || 0,
-          name: crypto.name || "-",
-          code: crypto.code || "-",
-          rate: crypto.rate || 0,
-          change: crypto.change || 0,
-          cap: crypto.cap || 0,
-          volume: crypto.volume || 0,
-          circulatingSupply: crypto.circulatingSupply || 0,
-          totalSupply: crypto.totalSupply || 0,
-          png64: crypto.png64 || "-",
-          change1h: crypto.delta.hour || 0,
-          change24h: crypto.delta.day || 0,
-          changeStatus: getChangeStatus(crypto.code, crypto.delta.hour),
-        }));
-      } else {
-        tableData = [];
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }
-
-  async function fetchHistoricalData(code: string, startTS: number, endTS: number) {
-    // TS = timestamp
-    try {
-      const response = await getHistoricalData(code, shortenedCurrency, startTS, endTS);
-      if (response) {
-        historicalTableData = response.history.map((item: any) => ({
-          code: response.code || "-",
-          history: item.rate || null,
-        }));
-      } else {
-        historicalTableData = [];
-      }
+      if (isDomReady) {
+        tableData = (await fetchMultipleCoinData(
+          sortBy,
+          sortDirection,
+          entryCount,
+          currentPage,
+          previousChanges
+        )) as CryptoData[];
+        historicalTableData = (await fetchHistoricalData(
+          tableData?.[0]?.code,
+          getUnixTimeXDaysAgo(7),
+          getCurrentUnixTime()
+        )) as HistoricalCryptoData[];
+      } else return;
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -119,23 +96,6 @@
 
     if (browser) {
       localStorage.setItem("previousChanges", JSON.stringify(previousChanges));
-    }
-  }
-
-  function getChangeStatus(cryptoCode: string, newChange: number) {
-    const previous = parseFloat(previousChanges[cryptoCode] as unknown as string);
-    const change = newChange;
-
-    if (!isNaN(previous) && !isNaN(change)) {
-      if (change > previous) {
-        return "+";
-      } else if (change < previous) {
-        return "-";
-      } else {
-        return "/";
-      }
-    } else {
-      return "?";
     }
   }
 
@@ -166,7 +126,11 @@
   } */
 
   onMount(async () => {
-    await fetchData();
+    isDomReady = true;
+    destroyChart();
+    await fetchMainData();
+    await updateCharts();
+    await trackCryptoChanges();
     //document.addEventListener("visibilitychange", handleVisibilityChange); //uncomment for live update depending on the update rate time
     //startUpdates(); //uncomment for live update depending on the update rate time
   });
@@ -190,7 +154,7 @@
       <!-- On smaller screens (xs) -->
       <div class="xs:flex xs:flex-col xs:items-center sm:hidden">
         <span class="mr-1 text-xs sm:text-base text-text/30 dark:text-dark-text/30">
-          {shortenedCurrency}
+          {currency}
         </span><span class="text-xs sm:text-base">
           {@html formatNumberToHTML(crypto.rate).outerHTML}
         </span>
@@ -199,7 +163,7 @@
       <!-- On larger screens (sm and above) -->
       <div class="hidden sm:flex sm:items-center">
         <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
-          {shortenedCurrency}
+          {currency}
         </span>
         <span class="text-xs sm:text-base">
           {@html formatNumberToHTML(crypto.rate).outerHTML}
@@ -241,14 +205,12 @@
       </span>
     </td>
     <td class="hidden py-2 sm:px-4 sm:table-cell">
-      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
-        {shortenedCurrency}</span
-      >{@html formatNumberToHTML(crypto.cap).outerHTML}
+      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30"> {currency}</span>{@html formatNumberToHTML(crypto.cap)
+        .outerHTML}
     </td>
     <td class="hidden py-2 sm:px-4 sm:table-cell">
-      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30">
-        {shortenedCurrency}</span
-      >{@html formatNumberToHTML(crypto.volume).outerHTML}
+      <span class="mr-1 text-sm text-text/30 dark:text-dark-text/30"> {currency}</span>{@html formatNumberToHTML(crypto.volume)
+        .outerHTML}
     </td>
     <td class="hidden py-2 sm:px-4 sm:table-cell">
       {@html formatNumberToHTML(crypto.circulatingSupply).outerHTML}

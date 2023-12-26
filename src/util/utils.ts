@@ -1,5 +1,13 @@
+import { browser } from "$app/environment";
 import { goto } from "$app/navigation";
+import { currencyStore } from "@store/store";
 import Chart from "chart.js/auto";
+
+let currency: string | undefined;
+
+currencyStore.subscribe((value) => {
+  currency = value?.slice(0, value?.indexOf(" "));
+});
 
 export function formatNumberToHTML(number: number) {
   const suffixes = ["", "K", "M", "B", "T", "QD", "QN", "SX"];
@@ -10,9 +18,7 @@ export function formatNumberToHTML(number: number) {
   const decimalValue = shortValue.split(".")[1];
 
   const decimalClass =
-    decimalValue === "00" || decimalValue === "000"
-      ? "text-text/50 dark:text-dark-text/50"
-      : "text-text dark:text-dark-text";
+    decimalValue === "00" || decimalValue === "000" ? "text-text/50 dark:text-dark-text/50" : "text-text dark:text-dark-text";
 
   const spanElement = document.createElement("span");
 
@@ -115,7 +121,7 @@ export function convertDaysToDate(days: number) {
   return formattedDate;
 }
 
-export function destroyChart(canvas: HTMLCanvasElement | null) {
+export function destroyChartById(canvas: HTMLCanvasElement | null) {
   if (canvas) {
     const ctx = canvas.getContext("2d");
     if (ctx) {
@@ -127,9 +133,17 @@ export function destroyChart(canvas: HTMLCanvasElement | null) {
   }
 }
 
-function chartOptions(isDetail: boolean = false, currency?: string) {
+export function destroyChart() {
+  if (chartInstance) {
+    chartInstance = null;
+  }
+}
+
+function chartOptions(isDetail: boolean = false) {
   return {
     responsive: true,
+    //maintainAspectRatio: true,
+    onResize: handleResize,
     plugins: {
       legend: { display: isDetail },
       tooltip: {
@@ -149,45 +163,92 @@ function chartOptions(isDetail: boolean = false, currency?: string) {
       x: {
         display: false,
         title: { display: false, text: "Days" },
+        grid: { display: false },
       },
       y: {
         display: isDetail,
         title: { display: isDetail, text: "Price" },
+        grid: { display: false },
       },
     },
   };
 }
 
-export function createLineChart(
-  canvas: HTMLCanvasElement | null,
-  prices: any[],
-  isDetail?: boolean,
-  currency?: string
-) {
-  const ctx = canvas?.getContext("2d");
-  if (ctx) {
-    const chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
-        datasets: [
-          {
-            label: "",
-            fill: true,
-            data: prices,
-            borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
-            backgroundColor: document.body.classList.contains("dark")
-              ? "rgba(143, 77, 151, 0.7)"
-              : "rgba(143, 77, 151, 0.4)",
-            borderWidth: 1,
-            pointRadius: isDetail && isDetail ? 3 : 0, // Hide points
-          },
-        ],
-      },
-      //@ts-ignore
-      options: chartOptions(isDetail, currency),
-    });
-    chart.resize();
+export function createLineChartMultiple(canvas: HTMLCanvasElement | null, prices: any[]) {
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
+          datasets: [
+            {
+              label: "",
+              fill: true,
+              data: prices,
+              borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
+              backgroundColor: document.body.classList.contains("dark") ? "rgba(143, 77, 151, 0.7)" : "rgba(143, 77, 151, 0.4)",
+              borderWidth: 1,
+              pointRadius: 0,
+            },
+          ],
+        },
+        options: chartOptions(),
+      });
+    }
+  }
+}
+
+const handleResize = (chart: Chart) => {
+  chart.resize();
+};
+
+let chartInstance: Chart | null = null;
+
+export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
+  try {
+    if (canvas) {
+      if (chartInstance) {
+        chartInstance.data.datasets[0].data = prices;
+        chartInstance.options = chartOptions(true);
+        chartInstance.update();
+      } else {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          chartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
+              datasets: [
+                {
+                  label: "",
+                  fill: true,
+                  data: prices,
+                  borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
+                  backgroundColor: document.body.classList.contains("dark")
+                    ? "rgba(143, 77, 151, 0.7)"
+                    : "rgba(143, 77, 151, 0.4)",
+                  borderWidth: 1,
+                  pointRadius: 3,
+                },
+              ],
+            },
+            options: chartOptions(true),
+          });
+        } else return;
+      }
+      /*       if (browser) {
+        window.addEventListener("resize", () => {
+          if (chartInstance) {
+            chartInstance.resize();
+            chartInstance.update();
+          }
+        });
+      } else return; */
+    }
+  } catch (error) {
+    return;
   }
 }
 
@@ -209,4 +270,32 @@ export function generatePaginationLinks(currentPage: number, pageCount: number) 
     links.push(i);
   }
   return links;
+}
+
+export function getChangeStatus(cryptoCode: string, newChange: number, previousChanges: Record<string, number>) {
+  const previous = parseFloat(previousChanges[cryptoCode] as unknown as string);
+
+  if (!isNaN(previous) && !isNaN(newChange)) {
+    if (newChange > previous) {
+      return "+";
+    } else if (newChange < previous) {
+      return "-";
+    } else {
+      return "/";
+    }
+  } else {
+    return "?";
+  }
+}
+
+export async function checkDataReadiness(dataArrays: any[], store: any): Promise<void> {
+  return new Promise((resolve) => {
+    const int = setInterval(() => {
+      if (dataArrays.every((array) => Array.isArray(array) && array.length > 0)) {
+        store.set({ isLoading: false });
+        clearInterval(int);
+        resolve();
+      }
+    }, 0);
+  });
 }

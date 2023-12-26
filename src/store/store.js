@@ -15,8 +15,9 @@ export const pageCountStore = writable(entryStore);
 
 //Loading states
 export const dataLoading = writable(true);
-export const detailLoading = writable(true);
-export const secondaryDetailLoading = writable(true);
-export const exchangeLoading = writable(true);
-export const marketLoading = writable(true);
-export const fiatsLoading = writable(true);
+export const detailLoadingState = writable({ isLoading: true });
+export const exchangeLoadingState = writable({ isLoading: true });
+export const newsLoading = writable(true);
+
+//Charts
+export const chartDaysAgo = writable(7);

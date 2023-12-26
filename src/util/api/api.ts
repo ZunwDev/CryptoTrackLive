@@ -1,12 +1,11 @@
-import {
-  dataLoading,
-  detailLoading,
-  exchangeLoading,
-  fiatsLoading,
-  marketLoading,
-  secondaryDetailLoading,
-} from "../store/store";
-import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING } from "./constants";
+import { currencyStore, dataLoading, newsLoading } from "../../store/store";
+import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING, LOCAL_HOST_IP } from "../constants";
+
+let currency: string | undefined;
+
+currencyStore.subscribe((value) => {
+  currency = value?.slice(0, value?.indexOf(" "));
+});
 
 async function fetchData(apiEndpoint: string, requestBody: object) {
   try {
@@ -33,6 +32,7 @@ async function fetchDataCS(apiEndpoint: string) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": LOCAL_HOST_IP,
         "X-API-KEY": CS_API_KEY, // Do the steps that are mentioned in README.md, don't insert your api key here publicly
       },
     });
@@ -45,7 +45,6 @@ async function fetchDataCS(apiEndpoint: string) {
 }
 
 export async function getData(
-  currency?: string | undefined | null,
   sort?: string | undefined | null,
   order?: string | undefined | null,
   limit?: number | undefined | null,
@@ -55,7 +54,7 @@ export async function getData(
   dataLoading.set(true);
   const apiEndpoint = "https://api.livecoinwatch.com/coins/list";
   const requestBody = {
-    currency,
+    currency: currency || "USD",
     sort: sort || "rank",
     order: order || SORT_DIRECTION_ASCENDING,
     limit: limit || 100,
@@ -73,11 +72,9 @@ export async function getData(
 
 export async function getHistoricalData(
   code: string | undefined | null,
-  currency: string | undefined | null,
   start: number | undefined | null,
   end: number | undefined | null
 ) {
-  secondaryDetailLoading.set(true);
   const apiEndpoint = "https://api.livecoinwatch.com/coins/single/history";
   const requestBody = {
     currency,
@@ -91,11 +88,10 @@ export async function getHistoricalData(
     data = await fetchData(apiEndpoint, requestBody);
     return data;
   } finally {
-    secondaryDetailLoading.set(false);
   }
 }
 
-export async function getOverviewData(currency: string | undefined | null) {
+export async function getOverviewData() {
   const apiEndpoint = "https://api.livecoinwatch.com/overview";
   const requestBody = {
     currency,
@@ -109,8 +105,7 @@ export async function getOverviewData(currency: string | undefined | null) {
   }
 }
 
-export async function getDataSingle(currency: string | undefined | null, code: string | undefined) {
-  detailLoading.set(true);
+export async function getDataSingle(code: string | undefined) {
   const apiEndpoint = "https://api.livecoinwatch.com/coins/single";
   const requestBody = {
     currency,
@@ -122,16 +117,14 @@ export async function getDataSingle(currency: string | undefined | null, code: s
     data = await fetchData(apiEndpoint, requestBody);
     return data;
   } finally {
-    detailLoading.set(false);
   }
 }
 
 export async function getMarketTickerData(
-  coin: string,
+  coin: string | undefined,
   limit?: number | undefined | null,
   page?: number | undefined | null
 ) {
-  marketLoading.set(true);
   const apiEndpoint = `https://openapiv1.coinstats.app/tickers/markets?fromCoin=${coin}&limit=${limit}&page=${page}&onlyVerified=true`;
   let data;
   try {
@@ -141,12 +134,10 @@ export async function getMarketTickerData(
     console.error("Error fetching data:", error);
     throw error;
   } finally {
-    marketLoading.set(false);
   }
 }
 
 export async function getFiatData() {
-  fiatsLoading.set(true);
   const apiEndpoint = "https://openapiv1.coinstats.app/fiats";
   try {
     const data = await fetchDataCS(apiEndpoint);
@@ -155,12 +146,10 @@ export async function getFiatData() {
     console.error("Error fetching data:", error);
     throw error;
   } finally {
-    fiatsLoading.set(false);
   }
 }
 
 export async function getExchangeTickerData() {
-  exchangeLoading.set(true);
   const apiEndpoint = "https://openapiv1.coinstats.app/tickers/exchanges";
   try {
     const data = await fetchDataCS(apiEndpoint);
@@ -169,6 +158,19 @@ export async function getExchangeTickerData() {
     console.error("Error fetching data:", error);
     throw error;
   } finally {
-    exchangeLoading.set(false);
+  }
+}
+
+export async function getNewsData(query: string | undefined) {
+  newsLoading.set(true);
+  const apiEndpoint = `https://openapiv1.coinstats.app/news/search?limit=50&query=${query?.toLowerCase()}&orderBy=DATE`;
+  try {
+    const data = await fetchDataCS(apiEndpoint);
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  } finally {
+    newsLoading.set(false);
   }
 }

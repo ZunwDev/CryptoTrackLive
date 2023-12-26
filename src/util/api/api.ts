@@ -32,7 +32,7 @@ async function fetchDataCS(apiEndpoint: string) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": LOCAL_HOST_IP,
+        //"Access-Control-Allow-Origin": LOCAL_HOST_IP,
         "X-API-KEY": CS_API_KEY, // Do the steps that are mentioned in README.md, don't insert your api key here publicly
       },
     });

@@ -1,5 +1,5 @@
 import { currencyStore, dataLoading, newsLoading } from "../../store/store";
-import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING, LOCAL_HOST_IP } from "../constants";
+import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING /* LOCAL_HOST_IP */ } from "../constants";
 
 let currency: string | undefined;
 

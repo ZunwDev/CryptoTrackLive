@@ -28,11 +28,20 @@
     fetchExchangeData,
     fetchFiatData,
   } from "@util/api/fetch/index";
-  import { chartDaysAgo, currencyStore, detailLoadingState, entryStore, exchangeLoadingState, pageStore } from "@store/store";
+  import {
+    chartDaysAgo,
+    currencyStore,
+    detailLoadingState,
+    entryStore,
+    exchangeLoadingState,
+    pageStore,
+    sortNewsBy,
+  } from "@store/store";
   import type { CryptoData, ExchangeData, FiatData, HistoricalCryptoData, MarketData, NewsData } from "../../../../types/Data";
   import CoinOverview from "@components/detail/CoinOverview.svelte";
   import ChartDisplay from "@components/detail/ChartDisplay.svelte";
   import MarketOverview from "@components/detail/MarketOverview.svelte";
+  import News from "@components/detail/News.svelte";
 
   export let data: any;
 
@@ -50,9 +59,11 @@
   let exchangeData: ExchangeData[] = [];
   let historicalTableData: HistoricalCryptoData[] = [];
   let newsData: NewsData[] = [];
+  let socialNewsData: NewsData[] = [];
 
   let linksWithIcons: any = [];
   let dataObj = data.data[0];
+  let sortNews: string;
 
   let currentPage: number = $pageStore;
   let pageCount: number = 100 / $entryStore;
@@ -67,6 +78,11 @@
     fetchMainData();
     fetchExchangeRelData();
   });
+
+  $: {
+    sortNews = $sortNewsBy;
+    fetchMainData();
+  }
 
   $: {
     entryCount = $entryStore;
@@ -117,6 +133,7 @@
       if (isDomReady) {
         //Reset links with icons
         linksWithIcons = [];
+        socialNewsData = [];
 
         tableData = (await fetchCoinData(dataObj.code)) as CryptoData[];
         historicalTableData = (await fetchHistoricalData(
@@ -130,10 +147,10 @@
         linksWithIcons = generateFilteredLinks(tableData);
 
         // Sort news data by createdAt
-        sortNewsData(filterNewsData(newsData));
+        sortNewsData(newsData);
 
         await updateChart();
-        await checkDataReadiness([tableData, historicalTableData], detailLoadingState);
+        await checkDataReadiness([tableData, historicalTableData, newsData], detailLoadingState);
       } else {
         return;
       }
@@ -190,19 +207,45 @@
       }));
   }
 
-  function filterNewsData(newsData: NewsData[]): NewsData[] {
+  function sortNewsData(newsData: NewsData[]) {
     const excludedSources = [".fr", ".es"];
-    const excludedTerms = ["twitter", "cointribune"];
+    const excludedTerms = ["twitter", "cointribune", "turk", "benelux", "coinotag", "reddit", "investorplace", "coincodex"];
+    const includedTerms = [$sortNewsBy.toString().toLowerCase()];
 
-    return newsData.filter(
-      (item) =>
-        !excludedSources.some((source) => item.source.includes(source)) &&
-        !excludedTerms.some((link) => item.link.includes(link))
-    );
-  }
+    const uniqueTitles = new Set<string>();
+    const filteredAndSorted = newsData
+      .filter(
+        (item) =>
+          !excludedSources.some((source) => item.source.toLowerCase().includes(source)) &&
+          !excludedTerms.some((link) => item.link.toLowerCase().includes(link))
+      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .filter((item) => {
+        const titleLower = item.title.toLowerCase();
+        if (!uniqueTitles.has(titleLower)) {
+          uniqueTitles.add(titleLower);
+          return true;
+        }
+        return false;
+      });
 
-  function sortNewsData(newsData: NewsData[]): void {
-    newsData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const filteredAndSortedSocialData = newsData
+      .filter((item) => includedTerms.some((link) => item.link.toLowerCase().includes(link)))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .filter((item) => {
+        const titleLower = item.title.toLowerCase();
+        if (!uniqueTitles.has(titleLower)) {
+          uniqueTitles.add(titleLower);
+          return true;
+        }
+        return false;
+      });
+
+    newsData.length = 0;
+    newsData.push(...filteredAndSorted);
+
+    socialNewsData.length = 0;
+    socialNewsData.push(...filteredAndSortedSocialData);
   }
 
   function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
@@ -271,7 +314,6 @@
         <ChartDisplay />
       </div>
     </div>
-    <div class="flex sm:flex-row flex-col gap-4 mt-2 relative overflow-hidden min-w-[320px]"></div>
   </div>
   <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} Markets</h1>
   <div class="w-full pb-4 mt-2">
@@ -342,5 +384,6 @@
       </div>
     </div>
   {/if}
-  <!-- <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} latest news</h1> -->
+  <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} Latest News</h1>
+  <News {newsData} {socialNewsData} />
 </section>

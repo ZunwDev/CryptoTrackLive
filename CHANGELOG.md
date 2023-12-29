@@ -1,5 +1,17 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.15 Beta
+
+### New features
+
+- Added coin news
+  - latest news based on what coin you are looking on
+  - there's also news from twitter and reddit, but they aren't reliable that much (some of them are really old (even few years))
+
+### Up and coming
+
+- Next update will bring currency converting directly in the detail page, i.e. turn usd into eur etc. and also chart zoom probably
+
 ## Version 0.14.4 Beta
 
 ### Changes

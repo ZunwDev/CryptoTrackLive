@@ -63,11 +63,17 @@ export interface ExchangeData {
 }
 
 export interface NewsData {
+  imgUrl: any;
+  id: string;
   data: any;
   title: string;
   description: string;
   source: string;
   link: string;
   createdAt: string;
-  contentHighlights: [];
+}
+
+export interface OverallNewsData {
+  id: string;
+  imgUrl: string;
 }

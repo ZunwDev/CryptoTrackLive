@@ -3,7 +3,7 @@
 ## Description
 
 Track prices of many cryptocurrencies, with charts, sorting, currency converting, and more.
-Try it yourself: [https://cryptotrack-live.vercel.app](https://crypto-track-zunwdev.vercel.app)
+Try it yourself: [https://cryptotrack-live.vercel.app](https://cryptotrack-live.vercel.app)
 
 ## Important
 
@@ -14,10 +14,10 @@ Data are updated once user changes any of settings, i.e. currency, update rate, 
 ## Features
 
 - Responsive design
-- Live data (live data are currently off, due to daily API limitations)
-- Sort coins directly in table
+- Live data (live data are currently off, due to daily API credit limitations)
+- Coin sorting
 - Search coins
-- View coin details - WIP
+- View coin details + news - WIP
 - Minimalistic design
 - Dark/light mode
 - Currency convert
@@ -56,6 +56,7 @@ If you really want to contribute, I'm open for any contributions. Just be **awar
 ### Detail Page (WIP):
 
 ![sneakpeek-image2](src/lib/images/Screenshot_1.png)
+![sneakpeek-image3](src/lib/images/Screenshot_2.png)
 
 ## Check CHANGELOG.md for updates & changes
 

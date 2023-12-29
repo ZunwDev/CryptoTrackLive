@@ -32,7 +32,6 @@ async function fetchDataCS(apiEndpoint: string) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        //"Access-Control-Allow-Origin": LOCAL_HOST_IP,
         "X-API-KEY": CS_API_KEY, // Do the steps that are mentioned in README.md, don't insert your api key here publicly
       },
     });
@@ -162,8 +161,11 @@ export async function getExchangeTickerData() {
 }
 
 export async function getNewsData(query: string | undefined) {
+  if (query === "BNB") {
+    query = "Binance";
+  }
   newsLoading.set(true);
-  const apiEndpoint = `https://openapiv1.coinstats.app/news/search?limit=50&query=${query?.toLowerCase()}&orderBy=DATE`;
+  const apiEndpoint = `https://openapiv1.coinstats.app/news/search?limit=100&query=${query?.toLowerCase()}&orderBy=DATE`;
   try {
     const data = await fetchDataCS(apiEndpoint);
     return data;
@@ -172,5 +174,17 @@ export async function getNewsData(query: string | undefined) {
     throw error;
   } finally {
     newsLoading.set(false);
+  }
+}
+
+export async function getNewsDataById(id: string | undefined) {
+  const apiEndpoint = `https://openapiv1.coinstats.app/news/${id}`;
+  try {
+    const data = await fetchDataCS(apiEndpoint);
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  } finally {
   }
 }

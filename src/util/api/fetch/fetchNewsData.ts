@@ -8,12 +8,12 @@ export async function fetchNewsData(query: string | undefined) {
     if (response) {
       const newsItems = response.data;
       return newsItems.map((item: any) => ({
+        id: item.id || "-",
         title: item.title || "-",
         description: item.description || "-",
         source: item.source || "-",
         link: item.link || "-",
         createdAt: item.createdAt || "-",
-        contentHighlights: item.contentHighlights || [],
       }));
     } else {
       return [];

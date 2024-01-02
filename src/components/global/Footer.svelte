@@ -1,6 +1,7 @@
 <script>
   import github from "svelte-awesome/icons/github";
   import Icon from "svelte-awesome";
+  import { getCurrentYear } from "@util/utils";
 </script>
 
 <footer class="w-full px-4 bg-secondary dark:bg-dark-secondary min-w-[320px]">
@@ -14,10 +15,10 @@
       >
         <Icon data={github} class="w-8 h-8"></Icon>
       </a>
-      <!-- Add other social icons similarly -->
     </div>
     <p class="mt-4 text-xs text-center sm:text-sm text-text dark:text-dark-text">
-      &copy; 2023 CryptoTrackLive. All rights reserved. <a
+      &copy; {getCurrentYear()} CryptoTrackLive. All rights reserved.
+      <a
         class="underline hover:text-text/30 dark:hover:text-dark-text/30"
         href="https://github.com/ZunwDev/CryptoTrack/blob/main/LICENSE"
         target="_blank">MIT</a

@@ -40,8 +40,7 @@
       if (canvasElement) {
         destroyChartById(canvasElement);
         const prices = historicalTableData.map((item) => item.history);
-        const filteredArray = prices.filter((_, index) => index % 2 !== 0);
-        createLineChartMultiple(canvasElement, filteredArray);
+        createLineChartMultiple(canvasElement, prices);
       } else return;
     }
   }

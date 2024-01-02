@@ -3,12 +3,12 @@
   import Icon from "svelte-awesome";
   import { chevronDown, moonO, sunO, refresh, bars, search } from "svelte-awesome/icons";
   import { writable } from "svelte/store";
-  import { currencyStore, updateRate } from "@store/store";
+  import { currencyStore, searchedTerm, updateRate } from "@store/store";
   import { handleClickOutside, toggleMenu } from "@util/utils";
   import type { CryptoData, NoCoinsFound } from "../../types/Data";
   import { getData } from "@util/api/api";
   import { CURRENCIES, MAIN_PAGE_URL, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "@util/constants";
-  import Loading from "@components/util/Loading.svelte";
+  import { Loading } from "@components/util";
   import { browser } from "$app/environment";
 
   let currentCurrency: string = $currencyStore;
@@ -121,6 +121,11 @@
     store.set(newData);
   }
 
+  function setSearchData(code: string) {
+    searchMenu?.classList.toggle("hidden");
+    searchedTerm.set(code);
+  }
+
   onMount(() => {
     const storedMode = localStorage.getItem("color-theme");
     if (storedMode === "dark" || (!storedMode && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -225,7 +230,7 @@
               {#if result.png64}
                 <a
                   role="button"
-                  on:click={() => searchMenu?.classList.toggle("hidden")}
+                  on:click={() => setSearchData(result.code)}
                   href={`/detail/${result.rank}/${result.code}`}
                   class="flex items-center w-full h-12 px-4 text-left hover:bg-accent/30 dark:hover:bg-dark-accent/30"
                 >

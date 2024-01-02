@@ -70,6 +70,9 @@
               {news.description}
             </p>
             <div class="flex flex-row items-center gap-2 mt-auto">
+              <div class="px-1.5 py-1 rounded-md bg-bg dark:bg-dark-bg/30">
+                <p class="text-xs text-text dark:text-dark-text/60">New</p>
+              </div>
               <a target="_blank" class="text-sm hover:underline" href={extractDomainFromLink(news.link)}>{news.source}</a>
               <DotSeparator />
               <p class="text-sm">{timeAgo(news.createdAt)}</p>

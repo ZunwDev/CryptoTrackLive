@@ -7,7 +7,7 @@
   let currentLoadingState: boolean;
   export let tableData: CryptoData[];
   let currency: string | undefined;
-  export let historicalTableData: HistoricalCryptoData[];
+  //export let historicalTableData: HistoricalCryptoData[];
   export let dataObj: any;
 
   detailLoadingState.subscribe((value) => {
@@ -19,13 +19,13 @@
   });
 </script>
 
-{#if currentLoadingState}
+<!-- {#if currentLoadingState}
   <div class="flex items-center justify-center h-full">
     <div class="absolute">
       <Loading />
     </div>
-  </div>
-{:else if tableData.length > 0 && historicalTableData.length > 0}
+  </div> -->
+{#if !currentLoadingState}
   <div class="flex items-center w-full gap-3 p-4">
     {#if tableData[0]?.png64}
       <div class="flex-shrink-0">

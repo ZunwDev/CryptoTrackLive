@@ -1,5 +1,21 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.15.1 Beta
+
+### Changes
+
+- Revamped chart appearance by implementing gradient backgrounds for a more engaging visual display.
+- Adjusted the background for the homepage chart, providing a cleaner and clearer presentation.
+- Enhanced the data display on the chart to showcase the maximum available information from the API.
+- Refined the chart's real-time data integration, ensuring it accurately reflects the current time.
+- Reimagined the loading design on the detail page to resemble a skeleton structure (Work in progress).
+- Introduced a "New" tag to highlight the most recent news entries, enhancing their visibility.
+- Rearticulated the text content within entries, improving overall readability.
+- Optimized component organization for more efficient importing and management.
+- Implemented responsive features for the chart, ensuring adaptability across various screen sizes.
+- Streamlined the chart on the detail page by removing the legend for a cleaner interface.
+- Various enhancements and optimizations under the hood for improved performance and usability.
+
 ## Version 0.15 Beta
 
 ### New features

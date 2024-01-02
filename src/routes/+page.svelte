@@ -1,23 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import {
-    chevronDown,
-    angleDoubleUp,
-    folderOpenO,
-    sortAsc,
-    sortDesc,
-    sort,
-    angleDoubleLeft,
-    angleDoubleRight,
-  } from "svelte-awesome/icons";
-  import Data from "@components/home/Data.svelte";
+  import { chevronDown, angleDoubleUp, folderOpenO, sortAsc, sortDesc, sort } from "svelte-awesome/icons";
   import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "@store/store";
   import { generatePaginationLinks, handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "@util/utils";
   import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "@util/constants";
-  import Overview from "@components/home/Overview.svelte";
-  import Loading from "@components/util/Loading.svelte";
   import { browser } from "$app/environment";
+  import { Data, Overview } from "@components/home";
+  import { Loading } from "@components/util";
+  import { FirstPage, LastPage } from "@components/pagination";
 
   let currentLoadingState: boolean = $dataLoading;
   let currentEntry: number = $entryStore;
@@ -108,13 +99,13 @@
 
   onMount(() => {
     if (browser) {
-      //window.addEventListener("click", handleWindowClick);
+      window.addEventListener("click", handleWindowClick);
     }
   });
 </script>
 
 <svelte:head>
-  <title>Home</title>
+  <title>CryptoTrackLive Coins</title>
   <meta charset="UTF-8" />
   <meta name="description" content="App for crypto tracking" />
   <meta name="author" content="ZunwDev" />
@@ -193,21 +184,12 @@
         </div>
         <!-- Pagination -->
         <div class="flex items-center justify-center mx-auto">
-          <a
-            role="button"
-            on:click={() => (currentPage !== 1 ? pageStore.set(1) : undefined)}
-            href={currentPage !== 1 ? "/?page=1" : undefined}
-            class="px-3 py-2 rounded-tl-lg rounded-bl-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
-            1
-              ? 'opacity-70 cursor-not-allowed'
-              : 'hover:brightness-150 dark:hover:brigtness-200'}"
-            ><Icon data={angleDoubleLeft} class="scale-100 opacity-50 text-text dark:text-dark-text"></Icon></a
-          >
+          <FirstPage {currentPage} on:click={() => pageStore.set(1)} />
           {#if pageCount > 1}
             {#each generatePaginationLinks(currentPage, pageCount) as page}
               <a
                 role="button"
-                href="/?page={page}"
+                href="?page={page}"
                 on:click={() => (currentPage !== page ? pageStore.set(page) : undefined)}
                 class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {currentPage ===
                 page
@@ -216,35 +198,24 @@
               >
             {/each}
           {/if}
-          <a
-            role="button"
-            on:click={() => (currentPage !== pageCount ? pageStore.set(pageCount) : undefined)}
-            href={currentPage !== pageCount ? `/?page=${pageCount}` : undefined}
-            class="px-3 py-2 rounded-tr-lg rounded-br-lg border border-bg/50 dark:border-dark-bg/30 bg-secondary dark:bg-dark-secondary {currentPage ===
-            pageCount
-              ? 'opacity-70 cursor-not-allowed'
-              : 'hover:brightness-150 dark:hover:brigtness-200'}"
-            ><Icon data={angleDoubleRight} class="scale-100 opacity-50 text-text dark:text-dark-text"></Icon></a
-          >
+          <LastPage {currentPage} {pageCount} on:click={() => pageStore.set(pageCount)} />
         </div>
       </div>
       <!-- Entries Button -->
       <div class="relative">
         <button
           bind:this={entryButton}
-          id="entries-button"
           aria-expanded="false"
           class="absolute bottom-0.5 items-center right-0 px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 hidden md:inline-flex"
         >
           <Icon data={folderOpenO} class="mr-1 opacity-50" />
-          {currentEntry} Coins
+          {currentEntry} Entries
           <Icon data={chevronDown} class="ml-1 scale-75 opacity-50" />
         </button>
 
         <!-- Dropdown menu for entries -->
         <div
           bind:this={entryMenu}
-          id="entries-menu"
           tabindex="-1"
           aria-hidden="true"
           class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-1 bg-secondary dark:bg-dark-secondary"
@@ -258,7 +229,7 @@
                 ? '!bg-accent !dark:bg-dark-accent'
                 : ''}"
             >
-              {entryItem} Coins
+              {entryItem} Entries
             </button>
           {/each}
         </div>

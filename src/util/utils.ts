@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 import { goto } from "$app/navigation";
-import { currencyStore } from "@store/store";
+import { currencyStore, searchedTerm } from "@store/store";
 import Chart from "chart.js/auto";
 
 let currency: string | undefined;
@@ -83,32 +83,22 @@ export function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, 
 export function getUnixTimeXDaysAgo(days: number) {
   const today = new Date();
   const daysAgo = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
-  daysAgo.setUTCHours(0, 0, 0, 0);
   return daysAgo.getTime();
 }
 
-export function getCurrentUnixTime(startOfDay?: boolean) {
+export function getCurrentUnixTime() {
   const currentDate = new Date();
-  const currentHour = currentDate.getHours();
-  let firstNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(0, 1)) : currentHour;
-  let secondNumber = currentHour >= 10 ? parseInt(currentHour.toString().slice(1, 2)) : null;
-
-  if (startOfDay) {
-    firstNumber = 0;
-    secondNumber = 0;
-  }
-
-  if (secondNumber !== null) {
-    currentDate.setUTCHours(firstNumber, secondNumber, 0, 0);
-  } else {
-    currentDate.setUTCHours(firstNumber, 0, 0, 0);
-  }
-
   return currentDate.getTime();
+}
+
+export function getCurrentYear() {
+  const currentDate = new Date();
+  return currentDate.getFullYear();
 }
 
 export function handleDetailOpen(rank: number, code: string) {
   goto(`/detail/${rank}/${code}`);
+  searchedTerm.set(code);
 }
 
 export function convertDaysToDate(days: number) {
@@ -139,13 +129,17 @@ export function destroyChart() {
   }
 }
 
+const handleResize = (chart: Chart) => {
+  chart.resize();
+};
+
 function chartOptions(isDetail: boolean = false) {
   return {
     responsive: true,
-    //maintainAspectRatio: true,
+    maintainAspectRatio: false,
     onResize: handleResize,
     plugins: {
-      legend: { display: isDetail },
+      legend: { display: false },
       tooltip: {
         enabled: isDetail,
         callbacks: {
@@ -185,11 +179,11 @@ export function createLineChartMultiple(canvas: HTMLCanvasElement | null, prices
           datasets: [
             {
               label: "",
-              fill: true,
+              fill: false,
               data: prices,
               borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
               backgroundColor: document.body.classList.contains("dark") ? "rgba(143, 77, 151, 0.7)" : "rgba(143, 77, 151, 0.4)",
-              borderWidth: 1,
+              borderWidth: 2.5,
               pointRadius: 0,
             },
           ],
@@ -200,10 +194,6 @@ export function createLineChartMultiple(canvas: HTMLCanvasElement | null, prices
   }
 }
 
-const handleResize = (chart: Chart) => {
-  chart.resize();
-};
-
 let chartInstance: Chart | null = null;
 
 export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
@@ -213,8 +203,16 @@ export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: 
         chartInstance.data.datasets[0].data = prices;
         chartInstance.options = chartOptions(true);
         chartInstance.update();
+        chartInstance.resize();
       } else {
         const ctx = canvas.getContext("2d");
+        const gradient = ctx && ctx.createLinearGradient(0, 0, 0, 400);
+        gradient &&
+          gradient.addColorStop(
+            0,
+            document.body.classList.contains("dark") ? "rgba(143, 77, 151, 0.4)" : "rgba(143, 77, 151, 0.8)"
+          );
+        gradient && gradient.addColorStop(1, document.body.classList.contains("dark") ? "black" : "rgba(143, 77, 151, 0.1)");
         if (ctx) {
           chartInstance = new Chart(ctx, {
             type: "line",
@@ -226,26 +224,18 @@ export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: 
                   fill: true,
                   data: prices,
                   borderColor: document.body.classList.contains("dark") ? "pink" : "rgba(143, 77, 151, 0.9)",
-                  backgroundColor: document.body.classList.contains("dark")
-                    ? "rgba(143, 77, 151, 0.7)"
-                    : "rgba(143, 77, 151, 0.4)",
-                  borderWidth: 1,
+                  //@ts-ignore
+                  backgroundColor: gradient,
+                  borderWidth: 2,
                   pointRadius: 3,
                 },
               ],
             },
             options: chartOptions(true),
           });
+          chartInstance.resize();
         } else return;
       }
-      /*       if (browser) {
-        window.addEventListener("resize", () => {
-          if (chartInstance) {
-            chartInstance.resize();
-            chartInstance.update();
-          }
-        });
-      } else return; */
     }
   } catch (error) {
     return;

@@ -16,12 +16,15 @@
 
 {#if !chartLoaded}
   <div
-    class="absolute top-0 left-0 flex items-center justify-center w-full h-full"
+    class="absolute top-0 left-0 flex items-center justify-center w-full h-full {$detailLoadingState.isLoading
+      ? 'animate-pulse'
+      : ''}"
     style="display: {currentLoadingState ? 'flex' : 'none'}"
   >
-    <Loading />
+    <!-- <Loading /> -->
   </div>
 {/if}
-<div class="w-full h-full px-2">
+
+<div class="w-full h-full">
   <canvas id="canvas-chart"></canvas>
 </div>

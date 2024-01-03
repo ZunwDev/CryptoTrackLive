@@ -6,7 +6,7 @@
   import { LINK_ICONS, MAIN_PAGE_URL } from "@util/constants";
 
   // Utility Functions
-  import { checkDataReadiness, createDetailLineChart, generatePaginationLinks } from "@util/utils";
+  import { checkDataReadiness } from "@util/dataUtils";
 
   // API Fetch Functions
   import {
@@ -31,10 +31,12 @@
   import { ChartDisplay, CoinOverview, MarketOverview, Media, News } from "@components/detail";
   import { FirstPage, LastPage } from "@components/pagination";
   import { EntryButton } from "@components/util";
+  import { createDetailLineChart } from "@util/chartUtils";
+  import { generatePaginationLinks } from "@util/paginationUtils";
 
   export let data: any;
 
-  let currency: string | undefined = $currencyStore;
+  let currency: string = $currencyStore;
   let usdToTargetCurrencyRate: number;
 
   //Data
@@ -96,7 +98,7 @@
 
   function setChartToZero() {
     if (isDomReady) {
-      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement | null;
+      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement;
       if (canvasElement) {
         const initialData = new Array(101).fill(0);
         createDetailLineChart(canvasElement, initialData, initialData);
@@ -106,7 +108,7 @@
 
   async function updateChart() {
     setTimeout(() => {
-      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement | null;
+      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement;
       if (canvasElement) {
         const prices = historicalTableData.map((item) => item.history);
         const dates = historicalTableData.map((item) => item.date);

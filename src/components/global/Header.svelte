@@ -4,12 +4,12 @@
   import { chevronDown, moonO, sunO, refresh, bars, search } from "svelte-awesome/icons";
   import { writable } from "svelte/store";
   import { currencyStore, dataLoading, searchedTerm, updateRate } from "@store/store";
-  import { handleClickOutside, toggleMenu } from "@util/utils";
   import type { CryptoData, NoCoinsFound } from "../../types/Data";
   import { getData } from "@util/api/api";
   import { CURRENCIES, MAIN_PAGE_URL, UPDATE_RATES } from "@util/constants";
   import { Loading } from "@components/util";
   import { browser } from "$app/environment";
+  import { toggleMenu, handleClickOutside } from "@util/uiUtils";
 
   currencyStore.subscribe(async () => {
     await fetchData();
@@ -19,14 +19,14 @@
     await fetchData();
   });
 
-  let currencyMenu: HTMLElement | null;
-  let currencyButton: HTMLElement | null;
-  let updateRateMenu: HTMLElement | null;
-  let updateRateButton: HTMLElement | null;
-  let searchBarPCInput: HTMLInputElement | null;
-  let searchBarPC: HTMLElement | null;
-  let searchMenu: HTMLElement | null;
-  let darkModeIconElement: HTMLElement | null;
+  let currencyMenu: HTMLElement;
+  let currencyButton: HTMLElement;
+  let updateRateMenu: HTMLElement;
+  let updateRateButton: HTMLElement;
+  let searchBarPCInput: HTMLInputElement;
+  let searchBarPC: HTMLElement;
+  let searchMenu: HTMLElement;
+  let darkModeIconElement: HTMLElement;
   let tableData: CryptoData[] = [];
 
   const darkMode = writable(false);
@@ -34,7 +34,7 @@
     darkMode.update((mode) => {
       const isDark = document.documentElement.classList.toggle("dark", !mode);
       localStorage.setItem("color-theme", isDark ? "dark" : "");
-      const iconToChange = darkModeIconElement?.firstChild as HTMLElement | null;
+      const iconToChange = darkModeIconElement?.firstChild as HTMLElement;
       iconToChange?.classList.toggle("rotate-45", !isDark);
       return !mode;
     });
@@ -90,12 +90,12 @@
   };
 
   let storedSearchResults: (CryptoData | NoCoinsFound)[] = [];
-  let currentSearchInput: string | undefined = "";
+  let currentSearchInput: string;
 
-  const displaySearchResults = async (input: string | undefined) => {
+  const displaySearchResults = async (input: string) => {
     try {
       if (!storedSearchResults.length || currentSearchInput !== input) {
-        storedSearchResults = await searchCryptocurrencies(input as string);
+        storedSearchResults = await searchCryptocurrencies(input);
         currentSearchInput = input;
       }
     } catch (error) {
@@ -151,14 +151,25 @@
       });
     }
   });
-  let timer: number;
+
+  function debounce<F extends (...args: any[]) => void>(func: F, delay: number): (...args: Parameters<F>) => void {
+    let timer: ReturnType<typeof setTimeout>;
+    return function (this: any, ...args: Parameters<F>) {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  }
+
+  const debouncedSearchResults = debounce((value: string) => {
+    displaySearchResults(value);
+  }, 200);
+
   $: {
     if (searchBarPCInput) {
       searchBarPCInput.addEventListener("keyup", (event) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          displaySearchResults(searchBarPCInput?.value);
-        }, 200);
+        debouncedSearchResults(searchBarPCInput.value);
       });
     }
   }

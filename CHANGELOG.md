@@ -1,5 +1,16 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.15.2.1 Beta
+
+### Changes
+
+- Implemented structural improvements by modularizing the utils file into multiple smaller files for enhanced organization and maintainability.
+
+### Fixes
+
+- Resolved an issue causing significant lag in the search bar under certain edge cases, ensuring smoother performance.
+- Removed an unintended debug message for clearer and more refined documentation.
+
 ## Version 0.15.2 Beta
 
 ### New Features

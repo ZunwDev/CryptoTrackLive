@@ -1,8 +1,8 @@
 <script lang="ts">
   import { currencyStore, exchangeLoadingState } from "@store/store";
-  import { convertCurrency, formatNumberToHTML } from "@util/utils";
   import { Loading } from "@components/util";
   import type { MarketData } from "../../types/Data";
+  import { formatNumberToHTML, convertCurrency } from "@util/numberUtils";
 
   let currentExchangeLoadingState: boolean;
   export let usdToTargetCurrencyRate: number;

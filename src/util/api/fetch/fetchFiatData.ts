@@ -1,5 +1,5 @@
 import type { FiatData } from "../../../types/Data";
-import { getFiatData } from "../api";
+import { getFiatData } from "@util/api/api";
 
 export async function fetchFiatData() {
   try {

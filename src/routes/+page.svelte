@@ -2,11 +2,12 @@
   import Icon from "svelte-awesome";
   import { angleDoubleUp, sortAsc, sortDesc, sort } from "svelte-awesome/icons";
   import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "@store/store";
-  import { generatePaginationLinks, scrollToTop } from "@util/utils";
   import { SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "@util/constants";
   import { Data, Overview } from "@components/home";
   import { Loading, EntryButton } from "@components/util";
   import { FirstPage, LastPage } from "@components/pagination";
+  import { generatePaginationLinks } from "@util/paginationUtils";
+  import { scrollToTop } from "@util/scrollUtils";
 
   let pageCount: number = 100 / $entryStore;
 

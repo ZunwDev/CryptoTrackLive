@@ -1,5 +1,5 @@
 import type { ExchangeData } from "../../../types/Data";
-import { getExchangeTickerData } from "../api";
+import { getExchangeTickerData } from "@util/api/api";
 
 export async function fetchExchangeData() {
   try {

@@ -1,13 +1,12 @@
 <script lang="ts">
   import { currencyStore, detailLoadingState } from "@store/store";
-  import { convertDaysToDate, formatNumberToHTML } from "@util/utils";
-  import Loading from "@components/util/Loading.svelte";
-  import type { CryptoData, HistoricalCryptoData } from "../../types/Data";
+  import type { CryptoData } from "../../types/Data";
+  import { convertDaysToDate } from "@util/dateUtils";
+  import { formatNumberToHTML } from "@util/numberUtils";
 
   let currentLoadingState: boolean;
   export let tableData: CryptoData[];
   let currency: string | undefined;
-  //export let historicalTableData: HistoricalCryptoData[];
   export let dataObj: any;
 
   detailLoadingState.subscribe((value) => {
@@ -19,12 +18,6 @@
   });
 </script>
 
-<!-- {#if currentLoadingState}
-  <div class="flex items-center justify-center h-full">
-    <div class="absolute">
-      <Loading />
-    </div>
-  </div> -->
 {#if !currentLoadingState}
   <div class="flex items-center w-full gap-3 p-4">
     {#if tableData[0]?.png64}

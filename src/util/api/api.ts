@@ -1,5 +1,5 @@
-import { currencyStore, dataLoading, entryStore, newsLoading, pageStore, sortByStore, sortDirStore } from "../../store/store";
-import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING /* LOCAL_HOST_IP */ } from "../constants";
+import { currencyStore, dataLoading, entryStore, newsLoading, pageStore, sortByStore, sortDirStore } from "@store/store";
+import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING /* LOCAL_HOST_IP */ } from "@util/constants";
 
 let currency: string | undefined;
 let order: string | undefined;

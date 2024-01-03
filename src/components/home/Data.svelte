@@ -4,10 +4,12 @@
   import Icon from "svelte-awesome";
   import { caretDown, caretUp, minus } from "svelte-awesome/icons";
   import type { CryptoData, HistoricalCryptoData } from "../../types/Data";
-  import { createLineChartMultiple, destroyChart, destroyChartById, formatNumberToHTML, handleDetailOpen } from "@util/utils";
   import { currencyStore, entryStore, sortDirStore, sortByStore, pageStore } from "@store/store";
   import { fetchHistoricalData } from "@util/api/fetch";
   import { fetchMultipleCoinData } from "@util/api/fetch/fetchMultipleCoinData";
+  import { destroyChartById, createLineChartMultiple, destroyChart } from "@util/chartUtils";
+  import { formatNumberToHTML } from "@util/numberUtils";
+  import { handleDetailOpen } from "@util/uiUtils";
 
   let currency: string | undefined;
   //let updateInterval: number | undefined; //uncomment for live update depending on the update rate time

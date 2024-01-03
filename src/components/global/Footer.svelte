@@ -1,7 +1,7 @@
 <script>
   import github from "svelte-awesome/icons/github";
   import Icon from "svelte-awesome";
-  import { getCurrentYear } from "@util/utils";
+  import { getCurrentYear } from "@util/dateUtils";
 </script>
 
 <footer class="w-full px-4 bg-secondary dark:bg-dark-secondary min-w-[320px]">

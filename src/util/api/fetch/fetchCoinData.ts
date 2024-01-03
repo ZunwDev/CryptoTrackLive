@@ -1,5 +1,5 @@
 import type { CryptoData } from "../../../types/Data";
-import { getDataSingle } from "../api";
+import { getDataSingle } from "@util/api/api";
 
 export async function fetchCoinData(code: string) {
   try {

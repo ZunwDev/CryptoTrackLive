@@ -1,7 +1,8 @@
 <script lang="ts">
   import { entryStore, pageStore } from "@store/store";
   import { ENTRY_AMOUNT } from "@util/constants";
-  import { handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "@util/utils";
+  import { scrollToBottom, scrollToTop } from "@util/scrollUtils";
+  import { toggleMenu, handleClickOutside } from "@util/uiUtils";
   import { onMount } from "svelte";
   import { Icon } from "svelte-awesome";
 

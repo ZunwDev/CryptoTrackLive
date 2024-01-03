@@ -1,6 +1,6 @@
 import type { CryptoData } from "../../../types/Data";
-import { getChangeStatus } from "../../utils";
-import { getData } from "../api";
+import { getChangeStatus } from "@util/dataUtils";
+import { getData } from "@util/api/api";
 
 export async function fetchMultipleCoinData(previousChanges: Record<string, number>) {
   try {

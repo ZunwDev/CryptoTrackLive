@@ -4,7 +4,7 @@
   import type { OverviewData } from "../../types/Data";
   import { getOverviewData } from "@util/api/api";
   import { OVERVIEW_NAMES } from "@util/constants";
-  import { formatNumberToHTML } from "@util/utils";
+  import { formatNumberToHTML } from "@util/numberUtils";
 
   let currency: string | undefined;
   let tableData: OverviewData[] = [];

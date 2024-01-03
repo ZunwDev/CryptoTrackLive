@@ -1,4 +1,4 @@
-import { getNewsDataById } from "../api";
+import { getNewsDataById } from "@util/api/api";
 
 export async function fetchNewsDataById(id: string | undefined) {
   try {

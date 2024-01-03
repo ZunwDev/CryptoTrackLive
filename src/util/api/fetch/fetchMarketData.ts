@@ -1,5 +1,5 @@
 import type { MarketData } from "../../../types/Data";
-import { getMarketTickerData } from "../api";
+import { getMarketTickerData } from "@util/api/api";
 
 export async function fetchMarketData(
   coin: string | undefined,

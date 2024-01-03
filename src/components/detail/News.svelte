@@ -2,12 +2,12 @@
   import { detailLoadingState } from "@store/store";
   import type { NewsData } from "../../types/Data";
   import { fetchNewsDataById } from "@util/api/fetch";
-  import { timeAgo } from "@util/utils";
   import Loading from "@components/util/Loading.svelte";
   import DotSeparator from "@components/util/DotSeparator.svelte";
   import { sortNewsBy } from "@store/store";
   import { Icon } from "svelte-awesome";
   import { reddit, twitter } from "svelte-awesome/icons";
+  import { timeAgo } from "@util/dateUtils";
 
   let currentLoadingState: boolean;
   export let newsData: NewsData[] = [];

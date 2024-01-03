@@ -1,5 +1,5 @@
 import type { NewsData } from "../../../types/Data";
-import { getNewsData } from "../api";
+import { getNewsData } from "@util/api/api";
 
 export async function fetchNewsData(query: string | undefined) {
   try {

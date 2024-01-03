@@ -1,6 +1,6 @@
-import { getCurrentUnixTime, getUnixTimeXDaysAgo } from "@util/utils";
+import { getUnixTimeXDaysAgo, getCurrentUnixTime } from "@util/dateUtils";
 import type { HistoricalCryptoData } from "../../../types/Data";
-import { getHistoricalData } from "../api";
+import { getHistoricalData } from "@util/api/api";
 import { chartDaysAgo } from "@store/store";
 
 let chartZoom: number | string;

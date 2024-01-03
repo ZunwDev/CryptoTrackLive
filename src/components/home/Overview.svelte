@@ -6,11 +6,11 @@
   import { OVERVIEW_NAMES } from "@util/constants";
   import { formatNumberToHTML } from "@util/utils";
 
-  let shortenedCurrency: string | undefined;
+  let currency: string | undefined;
   let tableData: OverviewData[] = [];
 
   $: {
-    shortenedCurrency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
+    currency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
     fetchData();
   }
 
@@ -43,7 +43,7 @@
       <h4 class="text-sm font-semibold text-text dark:text-dark-text">{OVERVIEW_NAMES[i]}</h4>
       {#if i < 3}
         <h2 class="!text-2xl text-text dark:text-dark-text font-bold">
-          <span class="!text-lg !font-normal text-text/30 dark:text-dark-text/30">{shortenedCurrency}</span>
+          <span class="!text-lg !font-normal text-text/30 dark:text-dark-text/30">{currency}</span>
           {@html formatNumberToHTML(Number(crypto[key])).outerHTML}
         </h2>
       {:else}

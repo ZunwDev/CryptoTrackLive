@@ -4,26 +4,13 @@
   import Icon from "svelte-awesome";
   import { caretDown, caretUp, minus } from "svelte-awesome/icons";
   import type { CryptoData, HistoricalCryptoData } from "../../types/Data";
-  import {
-    createLineChartMultiple,
-    destroyChart,
-    destroyChartById,
-    formatNumberToHTML,
-    getCurrentUnixTime,
-    getUnixTimeXDaysAgo,
-    handleDetailOpen,
-  } from "@util/utils";
+  import { createLineChartMultiple, destroyChart, destroyChartById, formatNumberToHTML, handleDetailOpen } from "@util/utils";
   import { currencyStore, entryStore, sortDirStore, sortByStore, pageStore } from "@store/store";
   import { fetchHistoricalData } from "@util/api/fetch";
   import { fetchMultipleCoinData } from "@util/api/fetch/fetchMultipleCoinData";
 
   let currency: string | undefined;
   //let updateInterval: number | undefined; //uncomment for live update depending on the update rate time
-  let sortDirection: string | undefined;
-  let entryCount: number | undefined;
-  let sortBy: string | undefined;
-  let currentPage: number | undefined;
-  let chartZoom: number | undefined = 7;
 
   let isDomReady: boolean = false;
 
@@ -35,7 +22,7 @@
   async function updateCharts() {
     if (typeof document === "undefined") return;
     for (const [index, item] of tableData.entries()) {
-      historicalTableData = await fetchHistoricalData(item.code, getUnixTimeXDaysAgo(Number(chartZoom)), getCurrentUnixTime());
+      historicalTableData = await fetchHistoricalData(item.code);
       const canvasElement = document.getElementById(`canvas-${index}`) as HTMLCanvasElement | null;
       if (canvasElement) {
         destroyChartById(canvasElement);
@@ -53,30 +40,20 @@
     }
   }
 
-  $: {
-    currency = $currencyStore?.slice(0, $currencyStore?.indexOf(" "));
-    entryCount = $entryStore;
-    sortDirection = $sortDirStore;
-    sortBy = $sortByStore;
-    currentPage = $pageStore;
+  currencyStore.subscribe((value) => {
+    currency = value?.slice(0, value?.indexOf(" "));
     updateAllData();
-  }
+  });
+
+  [entryStore, sortDirStore, sortByStore, pageStore].forEach((store) => {
+    store.subscribe(updateAllData);
+  });
 
   async function fetchMainData() {
     try {
       if (isDomReady) {
-        tableData = (await fetchMultipleCoinData(
-          sortBy,
-          sortDirection,
-          entryCount,
-          currentPage,
-          previousChanges
-        )) as CryptoData[];
-        historicalTableData = (await fetchHistoricalData(
-          tableData?.[0]?.code,
-          getUnixTimeXDaysAgo(7),
-          getCurrentUnixTime()
-        )) as HistoricalCryptoData[];
+        tableData = (await fetchMultipleCoinData(previousChanges)) as CryptoData[];
+        historicalTableData = (await fetchHistoricalData(tableData?.[0]?.code)) as HistoricalCryptoData[];
       } else return;
     } catch (error) {
       console.error("Error fetching data:", error);

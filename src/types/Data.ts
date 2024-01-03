@@ -20,6 +20,7 @@ export interface CryptoData {
 }
 
 export interface HistoricalCryptoData {
+  date: number;
   code: string;
   history: any;
   rate: number;

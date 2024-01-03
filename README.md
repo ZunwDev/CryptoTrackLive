@@ -55,7 +55,7 @@ If you really want to contribute, I'm open for any contributions. Just be **awar
 
 ### Detail Page (WIP):
 
-![sneakpeek-image2](src/lib/images/Screenshot_5.png)
+![sneakpeek-image2](src/lib/images/Screenshot_1.png)
 ![sneakpeek-image3](src/lib/images/Screenshot_6.png)
 
 ## Check CHANGELOG.md for updates & changes

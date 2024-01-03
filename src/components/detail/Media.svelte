@@ -10,6 +10,7 @@
 <div class="flex flex-wrap items-center justify-start gap-2 px-4 py-2">
   {#each linksWithIcons as link}
     <a
+      title={link.url}
       href={link.url}
       class="flex items-center justify-center w-8 h-8 transition rounded-full group bg-text/20 dark:bg-dark-text/20 hover:text-text dark:hover:text-dark-text"
     >

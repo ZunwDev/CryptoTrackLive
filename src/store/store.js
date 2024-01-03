@@ -16,7 +16,7 @@ export const pageStore = writable(1);
 export const pageCountStore = writable(entryStore);
 
 //Loading states
-export const dataLoading = writable(true);
+export const dataLoading = writable({ isLoading: true });
 export const detailLoadingState = writable({ isLoading: true });
 export const exchangeLoadingState = writable({ isLoading: true });
 export const newsLoading = writable(true);

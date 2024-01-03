@@ -3,26 +3,21 @@
   import Icon from "svelte-awesome";
   import { chevronDown, moonO, sunO, refresh, bars, search } from "svelte-awesome/icons";
   import { writable } from "svelte/store";
-  import { currencyStore, searchedTerm, updateRate } from "@store/store";
+  import { currencyStore, dataLoading, searchedTerm, updateRate } from "@store/store";
   import { handleClickOutside, toggleMenu } from "@util/utils";
   import type { CryptoData, NoCoinsFound } from "../../types/Data";
   import { getData } from "@util/api/api";
-  import { CURRENCIES, MAIN_PAGE_URL, SORT_DIRECTION_ASCENDING, UPDATE_RATES } from "@util/constants";
+  import { CURRENCIES, MAIN_PAGE_URL, UPDATE_RATES } from "@util/constants";
   import { Loading } from "@components/util";
   import { browser } from "$app/environment";
 
-  let currentCurrency: string = $currencyStore;
-  let currentRate: number = $updateRate;
-
-  async function updateAllData() {
+  currencyStore.subscribe(async () => {
     await fetchData();
-  }
+  });
 
-  $: {
-    currentCurrency = $currencyStore;
-    currentRate = $updateRate;
-    updateAllData();
-  }
+  updateRate.subscribe(async () => {
+    await fetchData();
+  });
 
   let currencyMenu: HTMLElement | null;
   let currencyButton: HTMLElement | null;
@@ -33,7 +28,6 @@
   let searchMenu: HTMLElement | null;
   let darkModeIconElement: HTMLElement | null;
   let tableData: CryptoData[] = [];
-  let searchLoading: boolean = true;
 
   const darkMode = writable(false);
   function toggleDarkMode() {
@@ -48,8 +42,7 @@
 
   async function fetchData() {
     try {
-      searchLoading = true;
-      const response = (await getData(null, SORT_DIRECTION_ASCENDING, null)) as CryptoData[];
+      const response = (await getData(100)) as CryptoData[];
       if (response) {
         // @ts-ignore
         tableData = response.map((crypto) => ({
@@ -64,7 +57,6 @@
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
-      searchLoading = false;
     }
   }
 
@@ -102,7 +94,6 @@
 
   const displaySearchResults = async (input: string | undefined) => {
     try {
-      searchLoading = true;
       if (!storedSearchResults.length || currentSearchInput !== input) {
         storedSearchResults = await searchCryptocurrencies(input as string);
         currentSearchInput = input;
@@ -110,7 +101,6 @@
     } catch (error) {
       console.error("Error fetching search results:", error);
     } finally {
-      searchLoading = false;
     }
   };
 
@@ -155,7 +145,6 @@
           setTimeout(() => {
             searchBarPCInput?.focus();
             searchMenu?.classList.toggle("hidden");
-            searchLoading = true;
             displaySearchResults(searchBarPCInput?.value);
           }, 0);
         }
@@ -168,9 +157,8 @@
       searchBarPCInput.addEventListener("keyup", (event) => {
         clearTimeout(timer);
         timer = setTimeout(() => {
-          searchLoading = true;
           displaySearchResults(searchBarPCInput?.value);
-        }, 1000);
+        }, 200);
       });
     }
   }
@@ -179,7 +167,6 @@
     if (searchMenu) {
       searchMenu.classList.toggle("hidden");
       if (!searchMenu.classList.contains("hidden")) {
-        searchLoading = true;
         displaySearchResults(searchBarPCInput?.value);
       }
     }
@@ -221,7 +208,7 @@
           aria-hidden="true"
           class="absolute right-0 z-50 hidden w-64 py-1 overflow-y-auto rounded-md h-72 top-12 bg-secondary dark:bg-dark-secondary"
         >
-          {#if searchLoading}
+          {#if $dataLoading.isLoading}
             <div class="flex items-center justify-center w-full h-full">
               <Loading />
             </div>
@@ -300,7 +287,7 @@
           class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
         >
           <Icon data={refresh} class="scale-100 opacity-50" />
-          {currentRate / 1000}s
+          {$updateRate / 1000}s
           <Icon data={chevronDown} class="scale-75 opacity-50" />
         </button>
 
@@ -316,7 +303,7 @@
             <button
               on:click={() => updateData(rate, updateRateMenu, updateRateButton, updateRate)}
               class="flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {rate ===
-              currentRate
+              $updateRate
                 ? '!bg-accent !dark:bg-dark-accent'
                 : ''}"
             >

@@ -1,18 +1,24 @@
+import { getCurrentUnixTime, getUnixTimeXDaysAgo } from "@util/utils";
 import type { HistoricalCryptoData } from "../../../types/Data";
 import { getHistoricalData } from "../api";
+import { chartDaysAgo } from "@store/store";
 
-export async function fetchHistoricalData(
-  code: string | undefined | null,
-  startTS: number | undefined | null,
-  endTS: number | undefined | null
-) {
+let chartZoom: number | string;
+
+chartDaysAgo.subscribe((value) => {
+  chartZoom = value;
+});
+
+export async function fetchHistoricalData(code: string | undefined | null) {
   // TS = timestamp
+  let condition = chartZoom !== "ALL" ? getUnixTimeXDaysAgo(Number(chartZoom)) : 1451606400000;
   try {
-    const response = await getHistoricalData(code, startTS, endTS);
+    const response = await getHistoricalData(code, condition, getCurrentUnixTime());
     if (response) {
       return response.history.map((item: HistoricalCryptoData) => ({
         code: response.code || "-",
         history: item.rate || null,
+        date: item.date || null,
       }));
     } else {
       return [];

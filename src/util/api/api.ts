@@ -1,10 +1,30 @@
-import { currencyStore, dataLoading, newsLoading } from "../../store/store";
+import { currencyStore, dataLoading, entryStore, newsLoading, pageStore, sortByStore, sortDirStore } from "../../store/store";
 import { API_KEY, CS_API_KEY, SORT_DIRECTION_ASCENDING /* LOCAL_HOST_IP */ } from "../constants";
 
 let currency: string | undefined;
+let order: string | undefined;
+let sort: string | undefined;
+let limit: number | undefined;
+let currentPage: number | undefined;
 
 currencyStore.subscribe((value) => {
   currency = value?.slice(0, value?.indexOf(" "));
+});
+
+sortDirStore.subscribe((value) => {
+  order = value;
+});
+
+sortByStore.subscribe((value) => {
+  sort = value;
+});
+
+entryStore.subscribe((value) => {
+  limit = value;
+});
+
+pageStore.subscribe((value) => {
+  currentPage = value;
 });
 
 async function fetchData(apiEndpoint: string, requestBody: object) {
@@ -43,21 +63,15 @@ async function fetchDataCS(apiEndpoint: string) {
   }
 }
 
-export async function getData(
-  sort?: string | undefined | null,
-  order?: string | undefined | null,
-  limit?: number | undefined | null,
-  currentPage?: number | undefined | null,
-  currentEntry?: number | undefined | null
-) {
-  dataLoading.set(true);
+export async function getData(customLimit?: number) {
+  dataLoading.set({ isLoading: true });
   const apiEndpoint = "https://api.livecoinwatch.com/coins/list";
   const requestBody = {
     currency: currency || "USD",
     sort: sort || "rank",
     order: order || SORT_DIRECTION_ASCENDING,
-    limit: limit || 100,
-    offset: currentPage && currentEntry && currentPage * currentEntry - currentEntry,
+    limit: customLimit ? customLimit : limit || 100,
+    offset: currentPage && limit && currentPage * limit - limit,
     meta: true,
   };
   let data;
@@ -65,7 +79,7 @@ export async function getData(
     data = await fetchData(apiEndpoint, requestBody);
     return data;
   } finally {
-    dataLoading.set(false);
+    dataLoading.set({ isLoading: false });
   }
 }
 

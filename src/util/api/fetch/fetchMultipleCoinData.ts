@@ -2,15 +2,9 @@ import type { CryptoData } from "../../../types/Data";
 import { getChangeStatus } from "../../utils";
 import { getData } from "../api";
 
-export async function fetchMultipleCoinData(
-  sortBy: string | undefined,
-  sortDirection: string | undefined,
-  entryCount: number | undefined,
-  currentPage: number | undefined,
-  previousChanges: Record<string, number>
-) {
+export async function fetchMultipleCoinData(previousChanges: Record<string, number>) {
   try {
-    const response = (await getData(sortBy, sortDirection, entryCount, currentPage, entryCount)) as CryptoData[];
+    const response = (await getData()) as CryptoData[];
     if (response) {
       //@ts-ignore
       return response.map((crypto) => ({

@@ -1,5 +1,23 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.15.2 Beta
+
+### New Features
+
+- Introducing more flexible zoom options including 1d, 7d, 30d, 90d, 365d, and an all-encompassing view dating back to January 1st, 2016.
+- Detailed chart now displays timestamps and dates on the X scale for better context.
+- Users receive an "N/A" warning when attempting to convert to unsupported currencies within the market table.
+
+### Refinements and Optimizations
+
+- Codebase streamlined for significantly faster page loading times.
+- Improved search speed from 1 second to a swift 200 milliseconds.
+
+### Resolved Issues
+
+- Addressed unnecessary data loading during the detail page rewrite.
+- Removed the initial title for improved chart clarity and focus on the detail page.
+
 ## Version 0.15.1 Beta
 
 ### Changes

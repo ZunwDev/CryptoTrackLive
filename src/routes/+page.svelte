@@ -1,32 +1,18 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import { chevronDown, angleDoubleUp, folderOpenO, sortAsc, sortDesc, sort } from "svelte-awesome/icons";
+  import { angleDoubleUp, sortAsc, sortDesc, sort } from "svelte-awesome/icons";
   import { entryStore, sortDirStore, sortByStore, dataLoading, pageStore } from "@store/store";
-  import { generatePaginationLinks, handleClickOutside, scrollToBottom, scrollToTop, toggleMenu } from "@util/utils";
-  import { ENTRY_AMOUNT, SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "@util/constants";
-  import { browser } from "$app/environment";
+  import { generatePaginationLinks, scrollToTop } from "@util/utils";
+  import { SORT_DIRECTION_ASCENDING, SORT_DIRECTION_DESCENDING } from "@util/constants";
   import { Data, Overview } from "@components/home";
-  import { Loading } from "@components/util";
+  import { Loading, EntryButton } from "@components/util";
   import { FirstPage, LastPage } from "@components/pagination";
 
-  let currentLoadingState: boolean = $dataLoading;
-  let currentEntry: number = $entryStore;
-  let entryButton: HTMLElement | null;
-  let entryMenu: HTMLElement | null;
-  let currentPage: number = $pageStore;
-  let pageCount: number = 100 / currentEntry;
-  let sortedBy: string | undefined;
-  let sortOrder: string | undefined;
+  let pageCount: number = 100 / $entryStore;
 
-  $: {
-    currentEntry = $entryStore;
-    currentLoadingState = $dataLoading;
-    currentPage = $pageStore;
-    pageCount = 100 / currentEntry;
-    sortedBy = $sortByStore;
-    sortOrder = $sortDirStore;
-  }
+  entryStore.subscribe((value) => {
+    pageCount = 100 / value;
+  });
 
   let names: { name: string; sortable: boolean; sortBy?: string; sortDir?: string; hiddenOnSmall?: boolean }[] = [
     { name: "#", sortable: true, sortBy: "rank", sortDir: "ascending" },
@@ -40,24 +26,6 @@
     { name: "Supply", sortable: false, hiddenOnSmall: true },
     { name: "Max S.", sortable: false, hiddenOnSmall: true },
   ];
-
-  function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
-    pageStore.set(1);
-    dataLoading.set(true);
-    element1?.setAttribute("aria-hidden", "true");
-    element2?.setAttribute("aria-expanded", "false");
-    element1?.classList.toggle("hidden");
-    store.set(newData);
-    if (newData > 10) {
-      setTimeout(() => {
-        scrollToBottom();
-      }, 3000);
-    } else {
-      setTimeout(() => {
-        scrollToTop();
-      }, 1000);
-    }
-  }
 
   function sortCoins(sortBy?: string) {
     if (!sortBy) return;
@@ -87,21 +55,9 @@
     }
   }
 
-  function handleWindowClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (target === entryButton || (entryButton && entryButton.contains(target))) {
-      event.stopPropagation();
-      toggleMenu(entryMenu, entryButton, entryMenu);
-    } else {
-      handleClickOutside(event, entryMenu, entryButton);
-    }
+  function updateLoadingStore() {
+    dataLoading.set({ isLoading: true });
   }
-
-  onMount(() => {
-    if (browser) {
-      window.addEventListener("click", handleWindowClick);
-    }
-  });
 </script>
 
 <svelte:head>
@@ -118,7 +74,7 @@
 
 <section class="flex items-center justify-center w-full flex-col gap-2 py-8 min-w-[320px]">
   <h2 class="text-2xl text-text dark:text-dark-text">Cryptocurrency Prices Live</h2>
-  <h4 class="text-text dark:text-dark-text">Sorted by {sortedBy?.toUpperCase()} - {sortOrder?.toUpperCase()}</h4>
+  <h4 class="text-text dark:text-dark-text">Sorted by {$sortByStore?.toUpperCase()} - {$sortDirStore?.toUpperCase()}</h4>
 </section>
 
 <section class="flex flex-wrap items-center justify-center w-full gap-4 min-w-[320px] mb-4">
@@ -126,7 +82,7 @@
 </section>
 
 <section class="relative flex items-center justify-center w-full">
-  {#if currentLoadingState}
+  {#if $dataLoading.isLoading}
     <div class="absolute">
       <Loading />
     </div>
@@ -169,11 +125,11 @@
         </tbody>
       </table>
     </div>
-    {#if !currentLoadingState}
+    {#if !$dataLoading.isLoading}
       <div class="flex justify-between pt-4">
         <!-- Go up button -->
         <div class="relative">
-          {#if currentEntry > 10}
+          {#if $entryStore > 10}
             <button
               on:click={() => scrollToTop()}
               class="absolute left-0 inline-flex px-4 py-3 transition rounded-lg bottom-0.5 text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
@@ -184,56 +140,24 @@
         </div>
         <!-- Pagination -->
         <div class="flex items-center justify-center mx-auto">
-          <FirstPage {currentPage} on:click={() => pageStore.set(1)} />
+          <FirstPage on:click={() => pageStore.set(1)} />
           {#if pageCount > 1}
-            {#each generatePaginationLinks(currentPage, pageCount) as page}
+            {#each generatePaginationLinks($pageStore, pageCount) as page}
               <a
                 role="button"
                 href="?page={page}"
-                on:click={() => (currentPage !== page ? pageStore.set(page) : undefined)}
-                class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {currentPage ===
+                on:click={() => ($pageStore !== page ? pageStore.set(page) : undefined)}
+                class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {$pageStore ===
                 page
                   ? 'bg-accent dark:bg-dark-accent hover:brightness-150 dark:hover:brigtness-200'
                   : 'hover:brightness-150 dark:hover:brigtness-200 bg-secondary dark:bg-dark-secondary'}">{page}</a
               >
             {/each}
           {/if}
-          <LastPage {currentPage} {pageCount} on:click={() => pageStore.set(pageCount)} />
+          <LastPage {pageCount} on:click={() => pageStore.set(pageCount)} />
         </div>
       </div>
-      <!-- Entries Button -->
-      <div class="relative">
-        <button
-          bind:this={entryButton}
-          aria-expanded="false"
-          class="absolute bottom-0.5 items-center right-0 px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 hidden md:inline-flex"
-        >
-          <Icon data={folderOpenO} class="mr-1 opacity-50" />
-          {currentEntry} Entries
-          <Icon data={chevronDown} class="ml-1 scale-75 opacity-50" />
-        </button>
-
-        <!-- Dropdown menu for entries -->
-        <div
-          bind:this={entryMenu}
-          tabindex="-1"
-          aria-hidden="true"
-          class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-1 bg-secondary dark:bg-dark-secondary"
-        >
-          <!-- Entry selection buttons -->
-          {#each ENTRY_AMOUNT as entryItem}
-            <button
-              on:click={() => updateData(entryItem, entryMenu, entryButton, entryStore)}
-              class="inline-flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {entryItem ===
-              currentEntry
-                ? '!bg-accent !dark:bg-dark-accent'
-                : ''}"
-            >
-              {entryItem} Entries
-            </button>
-          {/each}
-        </div>
-      </div>
+      <EntryButton {updateLoadingStore} isScrollable={true} />
     {/if}
   </div>
 </section>

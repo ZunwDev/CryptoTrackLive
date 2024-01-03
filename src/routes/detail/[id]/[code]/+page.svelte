@@ -1,22 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { Icon } from "svelte-awesome";
-  import { chevronDown, folderOpenO } from "svelte-awesome/icons";
 
   // Constants
-  import { ENTRY_AMOUNT, LINK_ICONS, MAIN_PAGE_URL } from "@util/constants";
+  import { LINK_ICONS, MAIN_PAGE_URL } from "@util/constants";
 
   // Utility Functions
-  import {
-    checkDataReadiness,
-    createDetailLineChart,
-    generatePaginationLinks,
-    getCurrentUnixTime,
-    getUnixTimeXDaysAgo,
-    handleClickOutside,
-    toggleMenu,
-  } from "@util/utils";
+  import { checkDataReadiness, createDetailLineChart, generatePaginationLinks } from "@util/utils";
 
   // API Fetch Functions
   import {
@@ -40,15 +30,12 @@
   import type { CryptoData, ExchangeData, FiatData, HistoricalCryptoData, MarketData, NewsData } from "../../../../types/Data";
   import { ChartDisplay, CoinOverview, MarketOverview, Media, News } from "@components/detail";
   import { FirstPage, LastPage } from "@components/pagination";
+  import { EntryButton } from "@components/util";
 
   export let data: any;
 
-  let entryButton: HTMLElement | null;
-  let entryMenu: HTMLElement | null;
-
   let currency: string | undefined = $currencyStore;
-  let usdToTargetCurrencyRate: number | undefined;
-  let entryCount: number | undefined;
+  let usdToTargetCurrencyRate: number;
 
   //Data
   let tableData: CryptoData[] = [];
@@ -62,9 +49,7 @@
   let linksWithIcons: any = [];
   let dataObj = data.data[0];
 
-  let currentPage: number = $pageStore;
   let pageCount: number = 100 / $entryStore;
-  let chartZoom: number = $chartDaysAgo;
 
   let exchangeDataLoaded: boolean = false;
   let isDomReady: boolean = false;
@@ -76,42 +61,30 @@
     fetchExchangeRelatedData();
   });
 
-  sortNewsBy.subscribe((value) => {
+  sortNewsBy.subscribe(() => {
     fetchMainData();
   });
 
-  $: {
-    entryCount = $entryStore;
-    currentPage = $pageStore;
-    pageCount = 100 / $entryStore;
+  chartDaysAgo.subscribe(() => {
+    setChartToZero();
+    fetchMainData();
+  });
+
+  entryStore.subscribe((value) => {
+    pageCount = 100 / value;
     fetchExchangeRelatedData();
-  }
+  });
 
-  function setChartToZero() {
-    if (isDomReady) {
-      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement | null;
-      if (canvasElement) {
-        const initialData = new Array(101).fill(0);
-        createDetailLineChart(canvasElement, initialData);
-      }
-    }
-  }
+  pageStore.subscribe(() => {
+    fetchExchangeRelatedData();
+  });
 
-  async function updateChart() {
-    setTimeout(() => {
-      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement | null;
-      if (canvasElement) {
-        const prices = historicalTableData.map((item) => item.history);
-        createDetailLineChart(canvasElement, prices);
-      }
-    }, 100);
-  }
-
-  page.subscribe((value) => {
+  page.subscribe(() => {
     dataObj = data.data[0];
   });
 
-  searchedTerm.subscribe(async (value) => {
+  searchedTerm.subscribe(async () => {
+    [linksWithIcons, socialNewsData] = [[], []];
     detailLoadingState.set({ isLoading: true });
     exchangeLoadingState.set({ isLoading: true });
     setTimeout(async () => {
@@ -121,18 +94,32 @@
     }, 100);
   });
 
+  function setChartToZero() {
+    if (isDomReady) {
+      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement | null;
+      if (canvasElement) {
+        const initialData = new Array(101).fill(0);
+        createDetailLineChart(canvasElement, initialData, initialData);
+      }
+    }
+  }
+
+  async function updateChart() {
+    setTimeout(() => {
+      const canvasElement = document.getElementById(`canvas-chart`) as HTMLCanvasElement | null;
+      if (canvasElement) {
+        const prices = historicalTableData.map((item) => item.history);
+        const dates = historicalTableData.map((item) => item.date);
+        createDetailLineChart(canvasElement, prices, dates);
+      }
+    }, 100);
+  }
+
   async function fetchMainData() {
     try {
       if (isDomReady) {
-        //Reset links with icons
-        [linksWithIcons, socialNewsData] = [[], []];
-
         tableData = (await fetchCoinData(dataObj.code)) as CryptoData[];
-        historicalTableData = (await fetchHistoricalData(
-          dataObj.code,
-          getUnixTimeXDaysAgo(chartZoom),
-          getCurrentUnixTime()
-        )) as HistoricalCryptoData[];
+        historicalTableData = (await fetchHistoricalData(dataObj.code)) as HistoricalCryptoData[];
         newsData = (await fetchNewsData(tableData?.[0]?.name || "")) as NewsData[];
 
         // Generate links with icons
@@ -157,7 +144,7 @@
       exchangeDataLoaded = false;
 
       if (isDomReady) {
-        marketData = (await fetchMarketData(dataObj.code, entryCount, currentPage)) as MarketData[];
+        marketData = (await fetchMarketData(dataObj.code, $entryStore, $pageStore)) as MarketData[];
         exchangeData = (await fetchExchangeData()) as ExchangeData[];
         fiatData = (await fetchFiatData()) as FiatData[];
 
@@ -239,36 +226,18 @@
     socialNewsData.push(...filteredAndSortedSocialData);
   }
 
-  function updateData(newData: number, element1: HTMLElement | null, element2: HTMLElement | null, store: any) {
-    pageStore.set(1);
+  function updateLoadingStore() {
     exchangeLoadingState.set({ isLoading: true });
-    element1?.setAttribute("aria-hidden", "true");
-    element2?.setAttribute("aria-expanded", "false");
-    element1?.classList.toggle("hidden");
-    store.set(newData);
-  }
-
-  function handleWindowClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (target === entryButton || (entryButton && entryButton.contains(target))) {
-      event.stopPropagation();
-      toggleMenu(entryMenu, entryButton, entryMenu);
-    } else {
-      handleClickOutside(event, entryMenu, entryButton);
-    }
   }
 
   function updatePage(page: number) {
     pageStore.set(page);
-    exchangeLoadingState.set({ isLoading: true });
+    updateLoadingStore();
   }
 
   onMount(async () => {
-    isDomReady = true;
-    window.addEventListener("click", handleWindowClick);
     window.addEventListener("popstate", () => (window.location.href = MAIN_PAGE_URL)); // Redirect user back to home page from any detail page
-    await fetchMainData();
-    await fetchExchangeRelatedData();
+    isDomReady = true;
   });
 </script>
 
@@ -308,67 +277,37 @@
         </div>
       </div>
       <div
-        class="flex w-full rounded-lg h-[448px] bg-secondary dark:bg-dark-secondary min-w-[320px] relative px-2 {$detailLoadingState.isLoading
+        class="flex w-full rounded-lg h-[448px] bg-secondary dark:bg-dark-secondary min-w-[320px] flex-col gap-2 relative px-2 {$detailLoadingState.isLoading
           ? 'animate-pulse'
           : ''}"
       >
-        <ChartDisplay />
+        <ChartDisplay {dataObj} {currency} />
       </div>
     </div>
   </div>
-  <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} Markets</h1>
+  <h1 class="mt-8 text-2xl text-text dark:text-dark-text">{dataObj.code} Markets</h1>
   <div class="w-full pb-4 mt-2">
     <MarketOverview {usdToTargetCurrencyRate} {exchangeDataLoaded} {marketData} />
   </div>
   {#if exchangeDataLoaded && !$exchangeLoadingState.isLoading}
     <div class="flex items-center justify-center mx-auto">
-      <FirstPage {currentPage} on:click={() => updatePage(1)} />
+      <FirstPage on:click={() => updatePage(1)} />
       {#if pageCount > 1}
-        {#each generatePaginationLinks(currentPage, pageCount) as page}
-          <button
-            on:click={() => (currentPage !== page ? updatePage(page) : undefined)}
-            class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {currentPage ===
+        {#each generatePaginationLinks($pageStore, pageCount) as page}
+          <a
+            href={`?page=${page}`}
+            on:click={() => ($pageStore !== page ? updatePage(page) : undefined)}
+            class="w-8 flex justify-center items-center py-2 text-text dark:text-dark-text border border-bg/50 dark:border-dark-bg/30 {$pageStore ===
             page
               ? 'bg-accent dark:bg-dark-accent hover:brightness-150 dark:hover:brigtness-200'
-              : 'hover:brightness-150 dark:hover:brigtness-200 bg-secondary dark:bg-dark-secondary'}">{page}</button
+              : 'hover:brightness-150 dark:hover:brigtness-200 bg-secondary dark:bg-dark-secondary'}">{page}</a
           >
         {/each}
       {/if}
-      <LastPage {currentPage} {pageCount} on:click={() => updatePage(pageCount)} />
+      <LastPage {pageCount} on:click={() => updatePage(pageCount)} />
     </div>
-    <div class="relative">
-      <button
-        bind:this={entryButton}
-        aria-expanded="false"
-        class="absolute bottom-0 right-0 items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:inline-flex"
-      >
-        <Icon data={folderOpenO} class="mr-1 opacity-50" />
-        {entryCount} Entries
-        <Icon data={chevronDown} class="ml-1 scale-75 opacity-50" />
-      </button>
-
-      <!-- Dropdown menu for entries -->
-      <div
-        bind:this={entryMenu}
-        tabindex="-1"
-        aria-hidden="true"
-        class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-1 bg-secondary dark:bg-dark-secondary"
-      >
-        <!-- Entry selection buttons -->
-        {#each ENTRY_AMOUNT as entryItem}
-          <button
-            on:click={() => updateData(entryItem, entryMenu, entryButton, entryStore)}
-            class="inline-flex items-center w-full h-8 px-2 text-text dark:text-dark-text bg-secondary dark:bg-dark-secondary hover:bg-accent/30 dark:hover:bg-dark-accent/30 {entryItem ===
-            entryCount
-              ? '!bg-accent !dark:bg-dark-accent'
-              : ''}"
-          >
-            {entryItem} Entries
-          </button>
-        {/each}
-      </div>
-    </div>
+    <EntryButton {updateLoadingStore} />
   {/if}
-  <h1 class="mt-4 text-2xl text-text dark:text-dark-text">{dataObj.code} Latest News</h1>
+  <h1 class="mt-8 text-2xl text-text dark:text-dark-text">{dataObj.code} Latest News</h1>
   <News {newsData} {socialNewsData} />
 </section>

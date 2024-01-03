@@ -1,12 +1,16 @@
-import { browser } from "$app/environment";
 import { goto } from "$app/navigation";
-import { currencyStore, searchedTerm } from "@store/store";
+import { chartDaysAgo, currencyStore, searchedTerm } from "@store/store";
 import Chart from "chart.js/auto";
 
 let currency: string | undefined;
+let chartZoom: number;
 
 currencyStore.subscribe((value) => {
   currency = value?.slice(0, value?.indexOf(" "));
+});
+
+chartDaysAgo.subscribe((value) => {
+  chartZoom = value;
 });
 
 export function formatNumberToHTML(number: number) {
@@ -101,6 +105,34 @@ export function handleDetailOpen(rank: number, code: string) {
   searchedTerm.set(code);
 }
 
+export function convertUnixToDate(timestamp: number) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function convertTimestampToDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+export function convertTimestampToFullDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} - ${hours}:${minutes}:${seconds}`;
+}
+
 export function convertDaysToDate(days: number) {
   const millisecondsInADay = 24 * 60 * 60 * 1000;
   const currentDate = new Date();
@@ -143,25 +175,25 @@ function chartOptions(isDetail: boolean = false) {
       tooltip: {
         enabled: isDetail,
         callbacks: {
-          title: function (tooltipItems: any) {
-            return tooltipItems && tooltipItems.length > 0 ? "" : ``;
+          title: function (tooltipItem: any) {
+            return tooltipItem[0].label;
           },
           label: function (tooltipItem: any) {
             return `${currency}: ${tooltipItem.formattedValue}`;
           },
         },
       },
-      title: { display: isDetail, text: `Price Chart (${currency})` },
+      title: { display: false },
     },
     scales: {
       x: {
-        display: false,
+        display: isDetail,
         title: { display: false, text: "Days" },
         grid: { display: false },
       },
       y: {
         display: isDetail,
-        title: { display: isDetail, text: "Price" },
+        title: { display: false, text: "Price", position: "top" },
         grid: { display: false },
       },
     },
@@ -196,12 +228,20 @@ export function createLineChartMultiple(canvas: HTMLCanvasElement | null, prices
 
 let chartInstance: Chart | null = null;
 
-export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: any[]) {
+export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: any[], dates: any[]) {
   try {
     if (canvas) {
       if (chartInstance) {
         chartInstance.data.datasets[0].data = prices;
+        chartInstance.data.labels = dates.map((date, index) => {
+          if (chartZoom === 1) {
+            return convertTimestampToDate(date);
+          } else {
+            return convertUnixToDate(date);
+          }
+        });
         chartInstance.options = chartOptions(true);
+        chartInstance.config.data.labels = chartInstance.data.labels;
         chartInstance.update();
         chartInstance.resize();
       } else {
@@ -213,11 +253,18 @@ export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: 
             document.body.classList.contains("dark") ? "rgba(143, 77, 151, 0.4)" : "rgba(143, 77, 151, 0.8)"
           );
         gradient && gradient.addColorStop(1, document.body.classList.contains("dark") ? "black" : "rgba(143, 77, 151, 0.1)");
+        console.log(gradient);
         if (ctx) {
           chartInstance = new Chart(ctx, {
             type: "line",
             data: {
-              labels: Array.from({ length: prices.length }, (_, i) => `Day ${i + 1}`),
+              labels: dates.map((date, index) => {
+                if (chartZoom === 1) {
+                  return convertTimestampToDate(date);
+                } else {
+                  return convertUnixToDate(date);
+                }
+              }),
               datasets: [
                 {
                   label: "",
@@ -242,8 +289,8 @@ export function createDetailLineChart(canvas: HTMLCanvasElement | null, prices: 
   }
 }
 
-export function convertCurrency(usdPrice: number, rate: number | undefined) {
-  return usdPrice && rate && usdPrice * rate;
+export function convertCurrency(usdPrice: number, rate: number) {
+  return usdPrice && rate ? usdPrice * rate : "Not supported";
 }
 
 export function generatePaginationLinks(currentPage: number, pageCount: number) {

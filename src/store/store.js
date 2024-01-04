@@ -4,6 +4,7 @@ import { writable } from "svelte/store";
 export const currencyStore = writable("USD ($)");
 export const updateRate = writable(15000);
 export const searchedTerm = writable("");
+export const isSearchBarPhoneHidden = writable(true);
 
 //Sorting
 export const entryStore = writable(10);

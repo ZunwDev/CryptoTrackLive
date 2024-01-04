@@ -12,6 +12,7 @@
     <a
       title={link.url}
       href={link.url}
+      target="_blank"
       class="flex items-center justify-center w-8 h-8 transition rounded-full group bg-text/20 dark:bg-dark-text/20 hover:text-text dark:hover:text-dark-text"
     >
       <Icon

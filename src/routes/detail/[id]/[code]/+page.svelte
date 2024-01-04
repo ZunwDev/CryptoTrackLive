@@ -179,7 +179,7 @@
 
   function generateFilteredLinks(tableData: CryptoData[]): any[] {
     return Object.entries(tableData?.[0]?.links || {})
-      .filter(([_, value]) => value !== null)
+      .filter(([_, value]) => value && !value.toLowerCase().includes("discord"))
       .map(([type, url]) => ({
         type,
         url,

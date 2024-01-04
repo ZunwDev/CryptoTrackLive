@@ -32,12 +32,12 @@
 
 <div class="flex justify-between w-full px-2 py-2">
   <p class="justify-start text-lg font-semibold lg:text-2xl">{dataObj.code} Price Chart ({currency})</p>
-  <div class="flex flex-wrap justify-end gap-1 lg:flex-row lg:gap-1.5">
+  <div class="flex-wrap justify-end gap-1 lg:flex-row lg:gap-1.5" style="display: {!currentLoadingState ? 'flex' : 'none'}">
     {#each zooms as zoom}
       <button
         title={zoom === "ALL" ? "01.01.2016" : undefined}
         on:click={() => updateChartZoom(zoom)}
-        class="flex items-center justify-center w-fit px-2 border rounded-lg h-fit border-text/50 dark:border-dark-text/20 {zoom ===
+        class="flex items-center justify-center w-fit px-2 border rounded-lg h-6 border-text/50 dark:border-dark-text/20 {zoom ===
         $chartDaysAgo
           ? 'bg-accent dark:bg-dark-accent dark:text-text text-dark-text'
           : 'hover:bg-accent/30 dark:hover:bg-dark-accent/30'}">{zoom}{zoom !== "ALL" ? "D" : ""}</button
@@ -45,6 +45,6 @@
     {/each}
   </div>
 </div>
-<div class="w-full h-full pt-4 pb-2">
+<div class="w-full h-full pt-4 pb-4 md:pb-2">
   <canvas id="canvas-chart"></canvas>
 </div>

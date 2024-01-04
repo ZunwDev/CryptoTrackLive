@@ -1,23 +1,23 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import { chevronDown, moonO, sunO, refresh, bars, search } from "svelte-awesome/icons";
-  import { writable } from "svelte/store";
-  import { currencyStore, dataLoading, searchedTerm, updateRate } from "@store/store";
+  import { chevronDown, refresh, bars, search, remove } from "svelte-awesome/icons";
+  import { currencyStore, dataLoading, isSearchBarPhoneHidden, updateRate } from "@store/store";
   import type { CryptoData, NoCoinsFound } from "../../types/Data";
   import { getData } from "@util/api/api";
-  import { CURRENCIES, MAIN_PAGE_URL, UPDATE_RATES } from "@util/constants";
+  import { CURRENCIES, UPDATE_RATES } from "@util/constants";
   import { Loading } from "@components/util";
   import { browser } from "$app/environment";
+  import { DarkModeButton, Logo, ShowSearchData } from "@components/global";
   import { toggleMenu, handleClickOutside } from "@util/uiUtils";
+  import { focusElement } from "@util/uiUtils";
 
-  currencyStore.subscribe(async () => {
+  async function handleStoreChanges() {
     await fetchData();
-  });
+  }
 
-  updateRate.subscribe(async () => {
-    await fetchData();
-  });
+  currencyStore.subscribe(handleStoreChanges);
+  updateRate.subscribe(handleStoreChanges);
 
   let currencyMenu: HTMLElement;
   let currencyButton: HTMLElement;
@@ -25,20 +25,11 @@
   let updateRateButton: HTMLElement;
   let searchBarPCInput: HTMLInputElement;
   let searchBarPC: HTMLElement;
+  let searchBarInputPhone: HTMLInputElement;
+  let searchBarPhone: HTMLElement;
+  let searchMenuPhone: HTMLElement;
   let searchMenu: HTMLElement;
-  let darkModeIconElement: HTMLElement;
   let tableData: CryptoData[] = [];
-
-  const darkMode = writable(false);
-  function toggleDarkMode() {
-    darkMode.update((mode) => {
-      const isDark = document.documentElement.classList.toggle("dark", !mode);
-      localStorage.setItem("color-theme", isDark ? "dark" : "");
-      const iconToChange = darkModeIconElement?.firstChild as HTMLElement;
-      iconToChange?.classList.toggle("rotate-45", !isDark);
-      return !mode;
-    });
-  }
 
   async function fetchData() {
     try {
@@ -111,17 +102,7 @@
     store.set(newData);
   }
 
-  function setSearchData(code: string) {
-    searchMenu?.classList.toggle("hidden");
-    searchedTerm.set(code);
-  }
-
   onMount(() => {
-    const storedMode = localStorage.getItem("color-theme");
-    if (storedMode === "dark" || (!storedMode && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      toggleDarkMode();
-    }
-
     if (browser) {
       window.addEventListener("click", (event) => {
         const target = event.target as HTMLElement;
@@ -142,11 +123,9 @@
 
       window.addEventListener("keyup", (event) => {
         if (event.key === "/") {
-          setTimeout(() => {
-            searchBarPCInput?.focus();
-            searchMenu?.classList.toggle("hidden");
-            displaySearchResults(searchBarPCInput?.value);
-          }, 0);
+          focusElement(searchBarPCInput);
+          searchMenu?.classList.toggle("hidden");
+          displaySearchResults(searchBarPCInput?.value);
         }
       });
     }
@@ -167,9 +146,17 @@
   }, 200);
 
   $: {
+    // For PC input
     if (searchBarPCInput) {
-      searchBarPCInput.addEventListener("keyup", (event) => {
+      searchBarPCInput.addEventListener("keyup", () => {
         debouncedSearchResults(searchBarPCInput.value);
+      });
+    }
+
+    // For phone input
+    if (searchBarInputPhone) {
+      searchBarInputPhone.addEventListener("keyup", () => {
+        debouncedSearchResults(searchBarInputPhone.value);
       });
     }
   }
@@ -182,17 +169,57 @@
       }
     }
   };
+
+  function removeTextFromSearchBar() {
+    searchBarInputPhone.value = "";
+    focusElement(searchBarInputPhone);
+    displaySearchResults(searchBarInputPhone.value);
+  }
+
+  function toggleSearchPhone() {
+    focusElement(searchBarInputPhone);
+    searchBarPhone.classList.toggle("hidden");
+    searchMenuPhone.classList.toggle("hidden");
+    isSearchBarPhoneHidden.set(!$isSearchBarPhoneHidden);
+    displaySearchResults(searchBarInputPhone.value);
+  }
 </script>
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
-  <nav class="flex px-4 py-3 my-auto mx-auto transition-all justify-between items-center w-full min-w-[320px]">
-    <a href={MAIN_PAGE_URL} class="relative flex items-center w-40 mr-auto sm:mr-0">
-      <span class="relative z-10 text-xl font-semibold tracking-wide text-text dark:text-dark-text">Crypto</span>
-      <span class="relative z-10 text-xl font-semibold tracking-wide text-accent dark:text-dark-accent">Track</span>
-      <span class="absolute top-0 right-0 px-1 text-xs rounded-md text-text bg-primary dark:text-dark-text dark:bg-dark-primary"
-        >LIVE</span
+  <div
+    bind:this={searchBarPhone}
+    class="absolute flex items-center justify-between hidden w-full h-16 gap-2 px-2 bg-secondary dark:bg-dark-secondary min-w-[320px] text-text dark:text-dark-text"
+  >
+    <Icon data={search} class="absolute inset-0 z-30 opacity-50 left-3 top-6"></Icon>
+    <input
+      bind:this={searchBarInputPhone}
+      type="text"
+      placeholder="Search coins..."
+      class="inset-0 flex w-full h-full pl-8 pr-6 text-left border-none outline-none bg-secondary text-text dark:text-dark-text dark:bg-dark-secondary focus:outline-none"
+    />
+    <div class="flex items-center justify-end gap-1">
+      <button
+        on:click={removeTextFromSearchBar}
+        class="flex items-center justify-center w-8 h-8 rounded-lg bg-text/10 dark:bg-dark-text/10 text-text dark:text-dark-text hover:bg-text/20 hover:dark:bg-dark-text/20"
+        ><Icon data={remove} /></button
       >
-    </a>
+      <button
+        on:click={toggleSearchPhone}
+        class="flex px-2 py-1 rounded-lg bg-text/10 dark:bg-dark-text/10 text-text dark:text-dark-text hover:bg-text/20 hover:dark:bg-dark-text/20"
+        >Cancel</button
+      >
+      <div
+        bind:this={searchMenuPhone}
+        tabindex="-1"
+        aria-hidden="true"
+        class="absolute right-0 z-50 hidden w-full py-1 overflow-y-auto border-t rounded-bl-md rounded-br-md h-96 top-16 bg-secondary dark:bg-dark-secondary border-text/20 dark:border-dark-text/20"
+      >
+        <ShowSearchData {storedSearchResults} {searchMenu} {searchMenuPhone} {searchBarPhone} />
+      </div>
+    </div>
+  </div>
+  <nav class="flex px-4 py-3 my-auto mx-auto transition-all justify-between items-center w-full min-w-[320px]">
+    <Logo />
 
     <div class="flex gap-0.5 md:gap-2 ml-auto md:ml-0">
       <!-- Search Bar PC -->
@@ -224,33 +251,16 @@
               <Loading />
             </div>
           {:else}
-            {#each storedSearchResults as result}
-              {#if result.png64}
-                <a
-                  role="button"
-                  on:click={() => setSearchData(result.code)}
-                  href={`/detail/${result.rank}/${result.code}`}
-                  class="flex items-center w-full h-12 px-4 text-left hover:bg-accent/30 dark:hover:bg-dark-accent/30"
-                >
-                  <div class="flex flex-row items-center gap-2">
-                    <img src={result.png64} alt={result.code} loading="lazy" class="w-6 h-6 mr-2" />
-                    <span class="truncate text-text dark:text-dark-text">{result.name}</span>
-                    <span class="text-xs text-text/30 dark:text-dark-text/30">{result.code}</span>
-                  </div>
-                </a>
-              {:else}
-                <div class="flex flex-row items-center justify-center h-full gap-2">
-                  <span class="truncate text-text dark:text-dark-text">{result.name}</span>
-                  <span class="text-xs text-text/30 dark:text-dark-text/30">{result.code}</span>
-                </div>
-              {/if}
-            {/each}
+            <ShowSearchData {storedSearchResults} {searchMenu} {searchMenuPhone} {searchBarPhone} />
           {/if}
         </div>
       </div>
       <!-- Search Bar Phone -->
       <button
-        class="relative flex items-center justify-center w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
+        on:click={toggleSearchPhone}
+        class="relative {!$isSearchBarPhoneHidden
+          ? 'hidden'
+          : ''} flex items-center justify-center w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
       >
         <span class="flex items-center justify-center transition-all">
           <Icon data={search}></Icon>
@@ -325,24 +335,14 @@
       </div>
 
       <!-- Dark Mode Toggle -->
-      <button
-        bind:this={darkModeIconElement}
-        on:click={toggleDarkMode}
-        class="relative items-center hidden w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
-      >
-        <span class="absolute inset-0 flex items-center justify-center transition-all duration-400">
-          {#if $darkMode}
-            <Icon data={moonO}></Icon>
-          {:else}
-            <Icon data={sunO}></Icon>
-          {/if}
-        </span>
-      </button>
+      <DarkModeButton />
 
       <!-- Burger Menu (Mobile) -->
       <button
         id="burger-menu"
-        class="relative items-center block w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
+        class="relative {!$isSearchBarPhoneHidden
+          ? 'hidden'
+          : ''} items-center block w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
       >
         <span class="inset-0 flex items-center justify-center transition-all">
           <Icon data={bars}></Icon>

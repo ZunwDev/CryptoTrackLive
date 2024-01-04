@@ -30,3 +30,9 @@ export function handleDetailOpen(rank: number, code: string) {
   goto(`/detail/${rank}/${code}`);
   searchedTerm.set(code);
 }
+
+export function focusElement(element: HTMLElement) {
+  setTimeout(() => {
+    element.focus();
+  }, 0);
+}

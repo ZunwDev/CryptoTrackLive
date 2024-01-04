@@ -1,5 +1,26 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.15.3 Beta
+
+### New Features
+
+- Implemented search functionality for small devices for enhanced user experience.
+
+### Changes
+
+- Hidden chart zoom options during loading to simplify the interface.
+- Updated behavior: Opening a coin's media now launches a new tab for better navigation.
+- Removed Discord from available media due to numerous invalid links.
+  - Other outdated media links persist due to limitations in the API.
+
+### Fixes
+
+- Rectified the issue where the chart height on smaller devices was insufficient, resulting in truncated content at the bottom.
+
+### Technical
+
+- The chart on the detail page might not reflect precise accuracy due to its dependence on the prices returned by the API. While the displayed prices encompass the data available, achieving absolute accuracy is limited by the data source. However, the chart does offer a representation of significant milestones for the coin, notably indicating approximate periods of its peak value over time.
+
 ## Version 0.15.2.1 Beta
 
 ### Changes

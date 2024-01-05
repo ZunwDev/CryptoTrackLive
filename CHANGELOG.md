@@ -1,5 +1,12 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.15.3.1 Beta
+
+### Changes & Fixes
+
+- Overhauled menu display to ensure that opening a new menu automatically hides the previous one. This enhancement restricts the visibility of only one menu at a time.
+- Implemented optimizations for improved performance and functionality.
+
 ## Version 0.15.3 Beta
 
 ### New Features

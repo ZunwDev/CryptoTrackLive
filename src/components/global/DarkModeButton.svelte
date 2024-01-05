@@ -27,6 +27,7 @@
 <button
   bind:this={darkModeIconElement}
   on:click={toggleDarkMode}
+  name="Dark mode"
   class="relative items-center hidden w-10 h-10 overflow-hidden transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
 >
   <span class="absolute inset-0 flex items-center justify-center transition-all duration-400">

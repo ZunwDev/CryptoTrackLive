@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isSearchBarPhoneHidden, searchedTerm } from "@store/store";
+  import { searchedTerm } from "@store/store";
   import type { CryptoData, NoCoinsFound } from "../../types/Data";
 
   export let storedSearchResults: (CryptoData | NoCoinsFound)[] = [];
@@ -13,7 +13,6 @@
     } else {
       searchMenuPhone.classList.toggle("hidden");
       searchBarPhone.classList.toggle("hidden");
-      isSearchBarPhoneHidden.set(!$isSearchBarPhoneHidden);
     }
     searchedTerm.set(code);
   }

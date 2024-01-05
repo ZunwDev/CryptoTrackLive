@@ -1,28 +1,15 @@
 import { goto } from "$app/navigation";
 import { searchedTerm } from "@store/store";
 
-export function toggleMenu(menu: HTMLElement | null, button: HTMLElement | null, otherMenu: HTMLElement | null) {
-  if (menu && button) {
-    const isMenuHidden = menu.classList.contains("hidden");
-    const isOtherMenuHidden = otherMenu ? otherMenu.classList.contains("hidden") : true;
-
-    if (isMenuHidden && !isOtherMenuHidden) {
-      otherMenu?.setAttribute("aria-hidden", "true");
-      otherMenu?.classList.add("hidden");
+export function handleClickOutside(menus: HTMLElement[] | null, buttons: HTMLElement[] | null) {
+  if (menus && buttons) {
+    for (let i = 0; i < menus.length; i++) {
+      const menu = menus[i];
+      const button = buttons[i];
+      menu.classList.add("hidden");
+      menu.setAttribute("aria-hidden", "true");
+      button.setAttribute("aria-expanded", "false");
     }
-
-    menu.setAttribute("aria-hidden", isMenuHidden ? "false" : "true");
-    button.setAttribute("aria-expanded", isMenuHidden ? "true" : "false");
-    menu.classList.toggle("hidden");
-  }
-}
-
-export function handleClickOutside(event: MouseEvent, menu: HTMLElement | null, button: HTMLElement | null) {
-  const target = event.target as HTMLElement;
-  if (menu && button && !menu.contains(target) && target !== button && !target.classList.contains("Icon")) {
-    menu.setAttribute("aria-hidden", "true");
-    button.setAttribute("aria-expanded", "false");
-    menu.classList.add("hidden");
   }
 }
 
@@ -35,4 +22,8 @@ export function focusElement(element: HTMLElement) {
   setTimeout(() => {
     element.focus();
   }, 0);
+}
+
+export function isElementClicked(target: HTMLElement, element: HTMLElement): boolean {
+  return element === target || (element && element.contains(target));
 }

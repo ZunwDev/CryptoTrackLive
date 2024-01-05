@@ -2,13 +2,11 @@
   import { entryStore, pageStore } from "@store/store";
   import { ENTRY_AMOUNT } from "@util/constants";
   import { scrollToBottom, scrollToTop } from "@util/scrollUtils";
-  import { toggleMenu, handleClickOutside } from "@util/uiUtils";
-  import { onMount } from "svelte";
   import { Icon } from "svelte-awesome";
 
   import { chevronDown, folderOpenO } from "svelte-awesome/icons";
-  let entryButton: HTMLElement | null;
-  let entryMenu: HTMLElement | null;
+  let entryButton: HTMLElement;
+  let entryMenu: HTMLElement;
   export let updateLoadingStore: any;
   export let isScrollable: boolean = false;
 
@@ -31,25 +29,12 @@
       }
     }
   }
-
-  function handleWindowClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (target === entryButton || (entryButton && entryButton.contains(target))) {
-      event.stopPropagation();
-      toggleMenu(entryMenu, entryButton, entryMenu);
-    } else {
-      handleClickOutside(event, entryMenu, entryButton);
-    }
-  }
-
-  onMount(async () => {
-    window.addEventListener("click", handleWindowClick);
-  });
 </script>
 
 <div class="relative">
   <button
     bind:this={entryButton}
+    data-associated-menu="entryMenu"
     aria-expanded="false"
     class="absolute bottom-0 right-0 items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:inline-flex"
   >
@@ -61,6 +46,7 @@
   <!-- Dropdown menu for entries -->
   <div
     bind:this={entryMenu}
+    id="entryMenu"
     tabindex="-1"
     aria-hidden="true"
     class="absolute right-0 z-50 hidden w-32 py-1 rounded-md top-1 bg-secondary dark:bg-dark-secondary"

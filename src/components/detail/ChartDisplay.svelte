@@ -10,10 +10,6 @@
     currentLoadingState = value.isLoading;
   });
 
-  function updateChartZoom(value: number) {
-    chartDaysAgo.set(value);
-  }
-
   const zooms: any[] = [1, 7, 30, 90, 365, "ALL"];
 
   setTimeout(() => {
@@ -36,7 +32,7 @@
     {#each zooms as zoom}
       <button
         title={zoom === "ALL" ? "01.01.2016" : undefined}
-        on:click={() => updateChartZoom(zoom)}
+        on:click={() => chartDaysAgo.set(zoom)}
         class="flex items-center justify-center w-fit px-2 border rounded-lg h-6 border-text/50 dark:border-dark-text/20 {zoom ===
         $chartDaysAgo
           ? 'bg-accent dark:bg-dark-accent dark:text-text text-dark-text'
@@ -45,6 +41,6 @@
     {/each}
   </div>
 </div>
-<div class="w-full h-full pt-4 pb-4 md:pb-2">
+<div class="w-full h-full pt-4 pb-8 md:pb-2">
   <canvas id="canvas-chart"></canvas>
 </div>

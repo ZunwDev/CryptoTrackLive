@@ -222,8 +222,8 @@
     </div>
     <div class="flex flex-col">
       <div class="flex justify-between px-4 mt-12 text-xl transition hover:text-accent dark:hover:text-dark-accent">
-        <a href="cryptotrack-live.vercel.app" class="w-full">Coins</a>
-        <a href="cryptotrack-live.vercel.app"><Icon data={arrowRight} class="scale-125" /></a>
+        <a href="https://cryptotrack-live.vercel.app" class="w-full">Coins</a>
+        <a href="https://cryptotrack-live.vercel.app"><Icon data={arrowRight} class="scale-125" /></a>
       </div>
     </div>
     {#if $screenWidth <= 768}

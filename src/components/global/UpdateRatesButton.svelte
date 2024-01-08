@@ -1,16 +1,21 @@
-<script>
+<script lang="ts">
   import { updateRate } from "@store/store";
   import { UPDATE_RATES } from "@util/constants";
   import { Icon } from "svelte-awesome";
   import { refresh, chevronDown } from "svelte-awesome/icons";
+
+  export let classProp: string = "";
 </script>
 
 <div class="relative">
   <!-- Update Button -->
   <button
     data-associated-menu="updateRateMenu"
+    id="update-rates-btn"
     aria-expanded="false"
-    class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
+    class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text {classProp
+      ? classProp
+      : ''} dark:bg-dark-secondary hover:brightness-150 md:block"
   >
     <Icon data={refresh} data-associated-menu="updateRateMenu" class="scale-100 opacity-50" />
     {$updateRate / 1000}s

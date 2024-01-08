@@ -1,16 +1,21 @@
-<script>
+<script lang="ts">
   import { currencyStore } from "@store/store";
   import { CURRENCIES } from "@util/constants";
   import { Icon } from "svelte-awesome";
   import { chevronDown } from "svelte-awesome/icons";
+
+  export let classProp: string = "";
 </script>
 
 <div class="relative">
   <!-- Currency Selector -->
   <button
     aria-expanded="false"
+    id="currency-btn"
     data-associated-menu="currencyMenu"
-    class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150 md:block"
+    class="items-center hidden px-2 py-2 transition rounded-lg text-text bg-secondary dark:text-dark-text {classProp
+      ? classProp
+      : ''} dark:bg-dark-secondary hover:brightness-150 md:block"
   >
     {$currencyStore}
     <Icon data={chevronDown} data-associated-menu="currencyMenu" class="scale-75 opacity-50" />

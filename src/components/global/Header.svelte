@@ -1,15 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "svelte-awesome";
-  import { bars, search, remove } from "svelte-awesome/icons";
+  import { bars, search, remove, arrowRight, github } from "svelte-awesome/icons";
   import { currencyStore, dataLoading, updateRate } from "@store/store";
   import type { CryptoData, NoCoinsFound } from "../../types/Data";
   import { getData } from "@util/api/api";
   import { Loading } from "@components/util";
   import { browser } from "$app/environment";
   import { DarkModeButton, Logo, ShowSearchData, CurrencyButton, UpdateRatesButton } from "@components/global";
-  import { handleClickOutside } from "@util/uiUtils";
+  import { handleClickOutside, toggleHidden } from "@util/uiUtils";
   import { focusElement } from "@util/uiUtils";
+  import { debounce } from "@util/globalUtils";
+  import { writable } from "svelte/store";
 
   async function handleStoreChanges() {
     await fetchData();
@@ -18,12 +20,22 @@
   currencyStore.subscribe(handleStoreChanges);
   updateRate.subscribe(handleStoreChanges);
 
+  let darkModeButton: HTMLElement | null;
+  let currencyButton: HTMLElement | null;
+  let updateRatesButton: HTMLElement | null;
+
+  let screenWidth = writable(0);
   let searchBarPCInput: HTMLInputElement;
   let searchBarInputPhone: HTMLInputElement;
   let searchBarPhone: HTMLElement;
   let searchMenuPhone: HTMLElement;
   let searchMenu: HTMLElement;
+  let burgerMenu: HTMLElement;
   let tableData: CryptoData[] = [];
+
+  if (browser) {
+    screenWidth.set(window.innerWidth);
+  }
 
   async function fetchData() {
     try {
@@ -100,6 +112,10 @@
     lastOpenedMenu = null;
   }
 
+  const handleResize = () => {
+    screenWidth.set(window.innerWidth);
+  };
+
   function showMenu(menus: any, buttons: any, menu: HTMLElement, target: HTMLElement) {
     menus.forEach(hideMenu);
     buttons.forEach((button: any) => button.setAttribute("aria-expanded", "false"));
@@ -114,6 +130,10 @@
 
   onMount(() => {
     if (browser) {
+      window.addEventListener("resize", handleResize);
+      darkModeButton = document.getElementById("dark-mode-btn");
+      currencyButton = document.getElementById("currency-btn");
+      updateRatesButton = document.getElementById("update-rates-btn");
       window.addEventListener("click", (event: any) => {
         let target = event.target as HTMLElement;
         event.stopPropagation();
@@ -146,16 +166,6 @@
     }
   });
 
-  function debounce<F extends (...args: any[]) => void>(func: F, delay: number): (...args: Parameters<F>) => void {
-    let timer: ReturnType<typeof setTimeout>;
-    return (...args: Parameters<F>): void => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        func(...args);
-      }, delay);
-    };
-  }
-
   const debouncedSearchResults = debounce((value: string) => displaySearchResults(value), 200);
 
   $: {
@@ -183,16 +193,59 @@
 
   const toggleSearchPhone = () => {
     focusElement(searchBarInputPhone);
-    searchBarPhone.classList.toggle("hidden");
-    searchMenuPhone.classList.toggle("hidden");
+    toggleHidden([searchBarPhone, searchMenuPhone]);
     displaySearchResults(searchBarInputPhone.value);
+  };
+
+  const toggleBurgerMenu = () => {
+    toggleHidden([burgerMenu, darkModeButton, currencyButton, updateRatesButton]);
   };
 </script>
 
 <header class="w-full border-b border-b-secondary dark:border-b-dark-secondary">
   <div
+    bind:this={burgerMenu}
+    class="fixed z-50 flex flex-col hidden md:hidden w-full h-full transition bg-secondary dark:bg-dark-secondary text-text dark:text-dark-text min-w-[320px]"
+  >
+    <div class="flex items-center justify-between w-full px-4 pt-2 pb-4 mt-2 border-b border-text/20 dark:border-dark-text/20">
+      <div class="flex items-center justify-center w-full">
+        <Logo />
+      </div>
+      <div class="flex items-center">
+        <button
+          on:click={toggleBurgerMenu}
+          class="z-50 flex items-center justify-center w-8 h-8 rounded-lg bg-text/10 dark:bg-dark-text/10 text-text dark:text-dark-text hover:bg-text/20 hover:dark:bg-dark-text/20"
+        >
+          <Icon data={remove} />
+        </button>
+      </div>
+    </div>
+    <div class="flex flex-col">
+      <div class="flex justify-between px-4 mt-12 text-xl transition hover:text-accent dark:hover:text-dark-accent">
+        <a href="cryptotrack-live.vercel.app" class="w-full">Coins</a>
+        <a href="cryptotrack-live.vercel.app"><Icon data={arrowRight} class="scale-125" /></a>
+      </div>
+    </div>
+    {#if $screenWidth <= 768}
+      <div class="flex flex-wrap justify-center w-full gap-1 px-2 py-4 mt-8 border-t border-text/20 dark:border-dark-text/20">
+        <CurrencyButton classProp={"bg-text/10 dark:bg-dark-text/10 hover:bg-text/30 dark:hover:bg-dark-text/20"} />
+        <UpdateRatesButton classProp={"bg-text/10 dark:bg-dark-text/10 hover:bg-text/30 dark:hover:bg-dark-text/20"} />
+        <DarkModeButton classProp={"bg-text/10 dark:bg-dark-text/10 hover:bg-text/30 dark:hover:bg-dark-text/20"} />
+      </div>
+    {/if}
+    <div class="flex flex-wrap justify-center w-full mt-4">
+      <a
+        href="https://github.com/ZunwDev"
+        target="_blank"
+        class="text-text dark:text-dark-text hover:text-text/20 dark:hover:text-dark-text/20"
+      >
+        <Icon data={github} class="w-8 h-8"></Icon>
+      </a>
+    </div>
+  </div>
+  <div
     bind:this={searchBarPhone}
-    class="absolute flex items-center justify-between z-50 hidden w-full h-16 gap-2 px-2 bg-secondary dark:bg-dark-secondary min-w-[320px] text-text dark:text-dark-text"
+    class="fixed flex items-center justify-between z-50 hidden md:hidden w-full h-16 gap-2 px-2 bg-secondary dark:bg-dark-secondary min-w-[320px] text-text dark:text-dark-text"
   >
     <Icon data={search} class="absolute inset-0 opacity-50 z-[51] left-3 top-6" />
     <input
@@ -216,7 +269,7 @@
         bind:this={searchMenuPhone}
         tabindex="-1"
         aria-hidden="true"
-        class="absolute right-0 z-50 hidden w-full py-2 overflow-y-auto border-t h-96 top-16 bg-secondary dark:bg-dark-secondary border-text/20 dark:border-dark-text/20"
+        class="fixed right-0 z-50 hidden w-full h-full py-2 overflow-y-auto border-t top-16 bg-secondary dark:bg-dark-secondary border-text/20 dark:border-dark-text/20"
       >
         <ShowSearchData {storedSearchResults} {searchMenu} {searchMenuPhone} {searchBarPhone} />
       </div>
@@ -275,16 +328,17 @@
       <span class="w-0.5 py-4 bg-secondary dark:bg-dark-secondary hidden md:block"></span>
 
       <!-- Currency Convert -->
-      <CurrencyButton />
+      <CurrencyButton classProp={""} />
 
       <!-- Update Rate Change -->
-      <UpdateRatesButton />
+      <UpdateRatesButton classProp={""} />
 
       <!-- Dark Mode Toggle -->
-      <DarkModeButton />
+      <DarkModeButton classProp={""} />
 
       <!-- Burger Menu (Mobile) -->
       <button
+        on:click={toggleBurgerMenu}
         id="burger-menu"
         class="relative items-center block w-10 h-10 overflow-hidden transition rounded-lg md:hidden text-text bg-secondary dark:text-dark-text dark:bg-dark-secondary hover:brightness-150"
       >

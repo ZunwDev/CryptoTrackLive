@@ -1,5 +1,13 @@
 # CryptoTrackLive - Change Log
 
+## Version 0.16 Beta
+
+### New Features:
+
+- Introduced display of coin ranks within search results for enhanced information.
+- Implemented settings modification for phones using the burger menu functionality.
+- Incorporated fixed backgrounds for menus on smaller devices to enhance user experience.
+
 ## Version 0.15.3.1 Beta
 
 ### Changes & Fixes

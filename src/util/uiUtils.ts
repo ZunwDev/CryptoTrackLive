@@ -24,6 +24,8 @@ export function focusElement(element: HTMLElement) {
   }, 0);
 }
 
-export function isElementClicked(target: HTMLElement, element: HTMLElement): boolean {
-  return element === target || (element && element.contains(target));
+export function toggleHidden(elements: any) {
+  return elements.forEach((element: any) => {
+    element?.classList.toggle("hidden");
+  });
 }

@@ -39,6 +39,9 @@
 
 {#if !currentLoadingState}
   <div class="flex flex-col gap-4 mt-4 md:flex-row">
+    <p>
+      API for news stopped working for some reason. Sorry for inconvenience (It's going to be back once it's fixed on API side)
+    </p>
     {#each newsData as news, index}
       {#if index === 0}
         <div class="md:w-[448px] w-full h-96 bg-secondary dark:bg-dark-secondary rounded-lg flex-shrink-0">

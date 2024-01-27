@@ -122,16 +122,16 @@
       if (isDomReady) {
         tableData = (await fetchCoinData(dataObj.code)) as CryptoData[];
         historicalTableData = (await fetchHistoricalData(dataObj.code)) as HistoricalCryptoData[];
-        newsData = (await fetchNewsData(tableData?.[0]?.name || "")) as NewsData[];
+        //newsData = (await fetchNewsData(tableData?.[0]?.name || "")) as NewsData[];
 
         // Generate links with icons
         linksWithIcons = generateFilteredLinks(tableData);
 
         // Sort news data by createdAt
-        sortNewsData(newsData);
+        //sortNewsData(newsData);
 
         await updateChart();
-        await checkDataReadiness([tableData, historicalTableData, newsData], detailLoadingState);
+        await checkDataReadiness([tableData, historicalTableData], detailLoadingState);
       } else {
         return;
       }
@@ -310,6 +310,8 @@
     </div>
     <EntryButton {updateLoadingStore} />
   {/if}
-  <h1 class="mt-8 text-2xl text-text dark:text-dark-text">{dataObj.code} Latest News</h1>
-  <News {newsData} {socialNewsData} />
+  <h1 class="mt-16 text-xl text-text dark:text-dark-text">
+    API for news stopped working for unknown reason. Sorry for inconvenience (It's going to be back once it's fixed on API side)
+  </h1>
+  <!-- <News {newsData} {socialNewsData} /> -->
 </section>
